@@ -73,18 +73,24 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
-      // Отправляем сообщение через API endpoint
-      const response = await fetch('/api/contact', {
+      // Отправляем сообщение через Formspree (работает на GitHub Pages)
+      const response = await fetch('https://formspree.io/f/xrgjqkqw', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+          _replyto: formData.email,
+          _subject: `Новое сообщение с сайта Sezim.abu: ${formData.subject}`,
+        }),
       });
 
-      const data = await response.json();
-
-      if (data.ok) {
+      if (response.ok) {
         setStatus(t({ 
           ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
           kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
@@ -102,8 +108,8 @@ const Contacts = () => {
         setErrors({});
       } else {
         setStatus(t({ 
-          ru: `❌ ${data.message}`, 
-          kz: `❌ ${data.message}` 
+          ru: '❌ Ошибка при отправке сообщения. Попробуйте еще раз.', 
+          kz: '❌ Хабарлама жіберу кезінде қате. Қайталап көріңіз.' 
         }));
       }
     } catch (error) {
