@@ -1,12 +1,11 @@
 // Максимально простой API для Telegram
 const https = require('https');
 
-module.exports = async function handler(req, res) {
-  try {
-    // CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+module.exports = function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -125,14 +124,16 @@ module.exports = async function handler(req, res) {
 </html>`;
       
       res.setHeader('Content-Type', 'text/html');
-      return res.status(200).send(html);
+      res.status(200).send(html);
+      return;
     }
     
-    return res.status(200).json({ 
+    res.status(200).json({ 
       ok: true, 
       message: 'API работает!',
       timestamp: new Date().toISOString()
     });
+    return;
   }
 
   // POST запрос - отправляем в Telegram
@@ -142,10 +143,11 @@ module.exports = async function handler(req, res) {
 
       // Валидация
       if (!name || !email || !subject || !message) {
-        return res.status(400).json({
+        res.status(400).json({
           ok: false,
           message: 'Заполните все обязательные поля'
         });
+        return;
       }
 
       // Получаем переменные окружения
@@ -154,10 +156,11 @@ module.exports = async function handler(req, res) {
 
       if (!token || !chatId) {
         console.log('Переменные окружения не найдены:', { token: !!token, chatId: !!chatId });
-        return res.status(500).json({
+        res.status(500).json({
           ok: false,
           message: 'Сервис временно недоступен'
         });
+        return;
       }
 
       // Формируем сообщение
@@ -189,51 +192,57 @@ ${message}
         }
       };
 
-      const telegramResponse = await new Promise((resolve, reject) => {
-        const req = https.request(options, (response) => {
-          let data = '';
-          response.on('data', (chunk) => data += chunk);
-          response.on('end', () => {
-            try {
-              resolve(JSON.parse(data));
-            } catch (e) {
-              reject(e);
+      const req_telegram = https.request(options, (response) => {
+        let data = '';
+        response.on('data', (chunk) => data += chunk);
+        response.on('end', () => {
+          try {
+            const telegramResponse = JSON.parse(data);
+            console.log('Telegram response:', telegramResponse);
+
+            if (!telegramResponse.ok) {
+              res.status(500).json({
+                ok: false,
+                message: 'Ошибка отправки в Telegram: ' + JSON.stringify(telegramResponse)
+              });
+              return;
             }
-          });
+
+            res.status(200).json({
+              ok: true,
+              message: 'Сообщение успешно отправлено!'
+            });
+          } catch (e) {
+            console.error('Parse error:', e);
+            res.status(500).json({
+              ok: false,
+              message: 'Ошибка парсинга ответа Telegram'
+            });
+          }
         });
-        
-        req.on('error', reject);
-        req.write(postData);
-        req.end();
       });
-
-      console.log('Telegram response:', telegramResponse);
-
-      if (!telegramResponse.ok) {
-        throw new Error('Ошибка отправки в Telegram: ' + JSON.stringify(telegramResponse));
-      }
-
-      return res.status(200).json({
-        ok: true,
-        message: 'Сообщение успешно отправлено!'
+      
+      req_telegram.on('error', (error) => {
+        console.error('Request error:', error);
+        res.status(500).json({
+          ok: false,
+          message: 'Ошибка запроса к Telegram: ' + error.message
+        });
       });
+      
+      req_telegram.write(postData);
+      req_telegram.end();
+      return;
 
     } catch (error) {
       console.error('Ошибка:', error);
-      return res.status(500).json({
+      res.status(500).json({
         ok: false,
         message: 'Ошибка при отправке сообщения: ' + error.message
       });
+      return;
     }
   }
 
   res.status(405).json({ ok: false, message: 'Метод не разрешен' });
-  
-  } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ 
-      ok: false, 
-      message: 'Внутренняя ошибка сервера: ' + error.message 
-    });
-  }
 };
