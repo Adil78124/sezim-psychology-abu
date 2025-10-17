@@ -1,0 +1,27 @@
+{
+  "name": "sezim-psychology-react",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Центр психологической поддержки Sezim.abu - React приложение",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "homepage": "https://anubizze.github.io/psychology",
+  "dependencies": {
+    "firebase": "^12.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.9.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^7.1.7"
+  }
+}
