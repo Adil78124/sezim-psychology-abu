@@ -1,4 +1,50 @@
 // API endpoint для обработки формы контактов через Telegram Bot
+const https = require('https');
+
+// Функция для отправки сообщения в Telegram
+function sendToTelegram(token, chatId, text) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'Markdown'
+    });
+
+    const options = {
+      hostname: 'api.telegram.org',
+      path: `/bot${token}/sendMessage`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let responseData = '';
+
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(responseData));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    req.write(data);
+    req.end();
+  });
+}
+
 module.exports = async function handler(req, res) {
   // Добавляем CORS заголовки
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -86,22 +132,9 @@ ${message}
 🌐 *IP:* ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'Неизвестно'}`;
 
     // Отправляем сообщение в Telegram
-    const telegramResponse = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: telegramMessage,
-        parse_mode: 'Markdown'
-      }),
-    });
-
-    const telegramData = await telegramResponse.json();
-    console.log('Telegram response:', telegramData);
-
-    if (!telegramResponse.ok) {
+    const telegramData = await sendToTelegram(token, chatId, telegramMessage);
+    
+    if (!telegramData.ok) {
       console.error('Ошибка отправки в Telegram:', telegramData);
       return res.status(500).json({
         ok: false,
