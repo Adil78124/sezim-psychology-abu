@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { sendContactMessage, initializeEmailJS } from '../../utils/emailService';
 import './Contacts.css';
 
 const Contacts = () => {
@@ -14,6 +15,8 @@ const Contacts = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -58,7 +61,7 @@ const Contacts = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = validateForm();
@@ -67,22 +70,47 @@ const Contacts = () => {
       return;
     }
 
-    alert(
-      t({
-        ru: 'Спасибо за обращение! Мы свяжемся с вами в ближайшее время.',
-        kz: 'Өтінішіңіз үшін рахмет! Біз жақын арада сізбен хабарласамыз.',
-      })
-    );
+    setIsSubmitting(true);
+    setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: '',
-      privacy: false,
-    });
-    setErrors({});
+    try {
+      // Инициализируем EmailJS
+      await initializeEmailJS();
+      
+      // Отправляем сообщение
+      const result = await sendContactMessage(formData);
+
+      if (result.ok) {
+        setStatus(t({ 
+          ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
+          kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
+        }));
+        
+        // Очищаем форму
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          privacy: false,
+        });
+        setErrors({});
+      } else {
+        setStatus(t({ 
+          ru: `❌ ${result.message}`, 
+          kz: `❌ ${result.message}` 
+        }));
+      }
+    } catch (error) {
+      console.error('Ошибка при отправке формы:', error);
+      setStatus(t({ 
+        ru: '⚠️ Ошибка соединения. Попробуйте еще раз.', 
+        kz: '⚠️ Байланыс қатесі. Қайталап көріңіз.' 
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -273,9 +301,22 @@ const Contacts = () => {
                   {errors.privacy && <span className="error-message">{errors.privacy}</span>}
                 </div>
 
-                <button type="submit" className="btn btn-primary btn-full">
-                  {t({ ru: 'Отправить сообщение', kz: 'Хабарлама жіберу' })}
+                <button 
+                  type="submit" 
+                  className="btn btn-primary btn-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting 
+                    ? t({ ru: 'Отправка...', kz: 'Жіберілуде...' })
+                    : t({ ru: 'Отправить сообщение', kz: 'Хабарлама жіберу' })
+                  }
                 </button>
+
+                {status && (
+                  <div className={`status-message ${status.includes('✅') ? 'success' : status.includes('❌') ? 'error' : 'info'}`}>
+                    {status}
+                  </div>
+                )}
               </form>
             </div>
 
