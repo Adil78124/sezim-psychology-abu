@@ -5,14 +5,15 @@
 </head>
 <body>
     <h1>Тест API endpoint</h1>
-    <button onclick="testContactMJS()">Тест GET /api/contact.mjs</button>
-    <button onclick="testContactPOST()">Тест POST /api/contact.mjs</button>
+    <button onclick="testContactGET()">Тест GET /api/contact</button>
+    <button onclick="testContactPOST()">Тест POST /api/contact</button>
+    <button onclick="testContactPage()">Открыть тестовую страницу API</button>
     <div id="result"></div>
 
     <script>
-        async function testContactMJS() {
+        async function testContactGET() {
             try {
-                const response = await fetch('/api/contact.mjs');
+                const response = await fetch('/api/contact');
                 const text = await response.text();
                 let data;
                 try {
@@ -21,12 +22,12 @@
                     data = { error: 'Not JSON', response: text };
                 }
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact MJS GET Результат:</h3>
+                    `<h3>Contact GET Результат:</h3>
                      <p>Status: ${response.status}</p>
                      <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
             } catch (error) {
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact MJS GET Ошибка:</h3><p>${error.message}</p>`;
+                    `<h3>Contact GET Ошибка:</h3><p>${error.message}</p>`;
             }
         }
 
@@ -41,7 +42,7 @@
             };
 
             try {
-                const response = await fetch('/api/contact.mjs', {
+                const response = await fetch('/api/contact', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -57,13 +58,17 @@
                     data = { error: 'Not JSON', response: text };
                 }
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact MJS POST Результат:</h3>
+                    `<h3>Contact POST Результат:</h3>
                      <p>Status: ${response.status}</p>
                      <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
             } catch (error) {
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact MJS POST Ошибка:</h3><p>${error.message}</p>`;
+                    `<h3>Contact POST Ошибка:</h3><p>${error.message}</p>`;
             }
+        }
+
+        function testContactPage() {
+            window.open('/api/contact?test=1', '_blank');
         }
     </script>
 </body>
