@@ -2,6 +2,8 @@
 const https = require('https');
 
 module.exports = async function handler(req, res) {
+  console.log('API called:', req.method, req.url);
+  
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -226,5 +228,6 @@ ${message}
     }
   }
 
+  // Если метод не GET, POST или OPTIONS
   res.status(405).json({ ok: false, message: 'Метод не разрешен' });
 };
