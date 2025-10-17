@@ -1,4 +1,4 @@
-module.exports = (req, res) => {
+export default (req, res) => {
   res.status(200).json({
     message: 'Environment variables test',
     hasToken: !!process.env.TELEGRAM_BOT_TOKEN,

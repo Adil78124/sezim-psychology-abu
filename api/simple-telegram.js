@@ -1,6 +1,6 @@
-const https = require('https');
+import https from 'https';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json');
     

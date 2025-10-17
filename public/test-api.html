@@ -5,19 +5,19 @@
 </head>
 <body>
     <h1>Тест API endpoint</h1>
-    <button onclick="testHelloCJS()">Тест /api/hello.cjs</button>
-    <button onclick="testSimpleCJS()">Тест /api/test.cjs</button>
-    <button onclick="testEnvCJS()">Тест переменных /api/env-test.cjs</button>
+    <button onclick="testHello()">Тест /api/hello</button>
+    <button onclick="testSimple()">Тест /api/test</button>
+    <button onclick="testEnv()">Тест переменных /api/env-test</button>
     <button onclick="testSimpleTelegram()">Простой Telegram тест</button>
-    <button onclick="testContactCJS()">Тест /api/contact.cjs</button>
-    <button onclick="testContactCJSGET()">Тест GET /api/contact.cjs</button>
-    <button onclick="testContactCJSPOST()">Тест POST /api/contact.cjs</button>
+    <button onclick="testContact()">Тест /api/contact</button>
+    <button onclick="testContactGET()">Тест GET /api/contact</button>
+    <button onclick="testContactPOST()">Тест POST /api/contact</button>
     <div id="result"></div>
 
     <script>
-        async function testHelloCJS() {
+        async function testHello() {
             try {
-                const response = await fetch('/api/hello.cjs');
+                const response = await fetch('/api/hello');
                 const text = await response.text();
                 let data;
                 try {
@@ -26,12 +26,12 @@
                     data = { error: 'Not JSON', response: text };
                 }
                 document.getElementById('result').innerHTML = 
-                    `<h3>Hello CJS Test Результат:</h3>
+                    `<h3>Hello Test Результат:</h3>
                      <p>Status: ${response.status}</p>
                      <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
             } catch (error) {
                 document.getElementById('result').innerHTML = 
-                    `<h3>Hello CJS Test Ошибка:</h3><p>${error.message}</p>`;
+                    `<h3>Hello Test Ошибка:</h3><p>${error.message}</p>`;
             }
         }
 
