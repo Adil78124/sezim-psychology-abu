@@ -74,7 +74,7 @@ const Contacts = () => {
 
     try {
       // Отправляем сообщение через API endpoint (работает на Vercel)
-      const response = await fetch('/api/contact.mjs', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

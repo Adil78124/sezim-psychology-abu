@@ -1,159 +1,115 @@
-// API endpoint для обработки формы контактов через Telegram Bot
+// Простейший API для Telegram - CommonJS формат
 const https = require('https');
 
-// Функция для отправки сообщения в Telegram
-function sendToTelegram(token, chatId, text) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify({
-      chat_id: chatId,
-      text: text,
-      parse_mode: 'Markdown'
-    });
-
-    const options = {
-      hostname: 'api.telegram.org',
-      path: `/bot${token}/sendMessage`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': data.length
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let responseData = '';
-
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(responseData));
-        } catch (e) {
-          reject(e);
-        }
-      });
-    });
-
-    req.on('error', (error) => {
-      reject(error);
-    });
-
-    req.write(data);
-    req.end();
-  });
-}
-
 module.exports = async function handler(req, res) {
-  // Добавляем CORS заголовки
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Обработка OPTIONS запроса для CORS
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  // Тестовый GET запрос
   if (req.method === 'GET') {
     return res.status(200).json({ 
       ok: true, 
-      message: 'API endpoint работает!',
+      message: 'API работает!',
       timestamp: new Date().toISOString()
     });
   }
 
-  // Проверяем метод запроса
-  if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      ok: false, 
-      message: 'Метод не разрешен. Используйте POST.' 
-    });
-  }
+  if (req.method === 'POST') {
+    try {
+      const { name, email, phone, subject, message, privacy } = req.body;
 
-  try {
-    // Получаем данные из формы
-    const { name, email, phone, subject, message, privacy } = req.body;
+      // Простая валидация
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({
+          ok: false,
+          message: 'Заполните все обязательные поля'
+        });
+      }
 
-    // Валидация обязательных полей
-    if (!name || !email || !subject || !message) {
-      return res.status(400).json({
-        ok: false,
-        message: 'Заполните все обязательные поля'
-      });
-    }
+      // Получаем переменные окружения
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
 
-    // Валидация email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        ok: false,
-        message: 'Некорректный email адрес'
-      });
-    }
+      if (!token || !chatId) {
+        console.log('Переменные окружения не найдены:', { token: !!token, chatId: !!chatId });
+        return res.status(500).json({
+          ok: false,
+          message: 'Сервис временно недоступен'
+        });
+      }
 
-    // Проверка согласия с политикой конфиденциальности
-    if (!privacy) {
-      return res.status(400).json({
-        ok: false,
-        message: 'Необходимо согласие с политикой конфиденциальности'
-      });
-    }
+      // Формируем сообщение
+      const telegramMessage = `📩 Новое сообщение с сайта Sezim.abu
 
-    // Получаем токен и chat_id из переменных окружения
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
+👤 Имя: ${name}
+📧 Email: ${email}
+📞 Телефон: ${phone || 'Не указан'}
+🎯 Тема: ${subject}
 
-    // Проверяем наличие токена и chat_id
-    if (!token || !chatId) {
-      console.error('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не настроены');
-      return res.status(500).json({
-        ok: false,
-        message: 'Сервис временно недоступен. Попробуйте позже.'
-      });
-    }
-
-    // Формируем сообщение для Telegram
-    const telegramMessage = `📩 *Новое сообщение с сайта Sezim.abu*
-
-👤 *Имя:* ${name}
-📧 *Email:* ${email}
-📞 *Телефон:* ${phone || 'Не указан'}
-🎯 *Тема:* ${subject}
-
-💬 *Сообщение:*
+💬 Сообщение:
 ${message}
 
-⏰ *Время:* ${new Date().toLocaleString('ru-RU')}
-🌐 *IP:* ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'Неизвестно'}`;
+⏰ Время: ${new Date().toLocaleString('ru-RU')}`;
 
-    // Отправляем сообщение в Telegram
-    const telegramData = await sendToTelegram(token, chatId, telegramMessage);
-    
-    if (!telegramData.ok) {
-      console.error('Ошибка отправки в Telegram:', telegramData);
+      // Отправляем в Telegram через https модуль
+      const postData = JSON.stringify({
+        chat_id: chatId,
+        text: telegramMessage
+      });
+
+      const options = {
+        hostname: 'api.telegram.org',
+        path: `/bot${token}/sendMessage`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+
+      const telegramResponse = await new Promise((resolve, reject) => {
+        const req = https.request(options, (res) => {
+          let data = '';
+          res.on('data', (chunk) => data += chunk);
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
+        
+        req.on('error', reject);
+        req.write(postData);
+        req.end();
+      });
+
+      console.log('Telegram response:', telegramResponse);
+
+      if (!telegramResponse.ok) {
+        throw new Error('Ошибка отправки в Telegram: ' + JSON.stringify(telegramResponse));
+      }
+
+      return res.status(200).json({
+        ok: true,
+        message: 'Сообщение успешно отправлено!'
+      });
+
+    } catch (error) {
+      console.error('Ошибка:', error);
       return res.status(500).json({
         ok: false,
-        message: 'Ошибка при отправке сообщения. Попробуйте еще раз.'
+        message: 'Ошибка при отправке сообщения: ' + error.message
       });
     }
-
-    // Успешный ответ
-    return res.status(200).json({
-      ok: true,
-      message: 'Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.'
-    });
-
-  } catch (error) {
-    console.error('Ошибка при обработке формы контактов:', error);
-    
-    return res.status(500).json({
-      ok: false,
-      message: 'Произошла ошибка при отправке сообщения. Попробуйте еще раз.'
-    });
   }
-}
+
+  res.status(405).json({ ok: false, message: 'Метод не разрешен' });
+};
