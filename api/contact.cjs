@@ -29,8 +29,11 @@ function sendToTelegram(token, chatId, text) {
 
       res.on('end', () => {
         try {
-          resolve(JSON.parse(responseData));
+          const parsed = JSON.parse(responseData);
+          console.log('Telegram API response:', parsed);
+          resolve(parsed);
         } catch (e) {
+          console.error('Ошибка парсинга ответа Telegram:', e, 'Response:', responseData);
           reject(e);
         }
       });
@@ -132,13 +135,18 @@ ${message}
 🌐 *IP:* ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'Неизвестно'}`;
 
     // Отправляем сообщение в Telegram
+    console.log('Отправляем в Telegram:', { token: token ? 'есть' : 'нет', chatId, messageLength: telegramMessage.length });
+    
     const telegramData = await sendToTelegram(token, chatId, telegramMessage);
+    
+    console.log('Ответ от Telegram:', telegramData);
     
     if (!telegramData.ok) {
       console.error('Ошибка отправки в Telegram:', telegramData);
       return res.status(500).json({
         ok: false,
-        message: 'Ошибка при отправке сообщения. Попробуйте еще раз.'
+        message: `Ошибка при отправке сообщения: ${telegramData.description || 'Неизвестная ошибка'}`,
+        telegramError: telegramData
       });
     }
 
