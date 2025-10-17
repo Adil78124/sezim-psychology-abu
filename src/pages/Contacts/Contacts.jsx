@@ -73,18 +73,21 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
-      // Отправляем сообщение через API endpoint (работает на Vercel)
-      const response = await fetch('/api/contact', {
+      // Отправляем сообщение через Formspree
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone || '');
+      formDataToSend.append('subject', formData.subject);
+      formDataToSend.append('message', formData.message);
+      formDataToSend.append('privacy', formData.privacy ? 'Согласен' : 'Не согласен');
+
+      const response = await fetch('https://formspree.io/f/xnngwwzg', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       });
 
-      const data = await response.json();
-
-      if (data.ok) {
+      if (response.ok) {
         setStatus(t({ 
           ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
           kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
