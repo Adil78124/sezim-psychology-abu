@@ -2,10 +2,11 @@
 const https = require('https');
 
 module.exports = async function handler(req, res) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  try {
+    // CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -189,10 +190,10 @@ ${message}
       };
 
       const telegramResponse = await new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
+        const req = https.request(options, (response) => {
           let data = '';
-          res.on('data', (chunk) => data += chunk);
-          res.on('end', () => {
+          response.on('data', (chunk) => data += chunk);
+          response.on('end', () => {
             try {
               resolve(JSON.parse(data));
             } catch (e) {
@@ -227,4 +228,12 @@ ${message}
   }
 
   res.status(405).json({ ok: false, message: 'Метод не разрешен' });
+  
+  } catch (error) {
+    console.error('API Error:', error);
+    res.status(500).json({ 
+      ok: false, 
+      message: 'Внутренняя ошибка сервера: ' + error.message 
+    });
+  }
 };
