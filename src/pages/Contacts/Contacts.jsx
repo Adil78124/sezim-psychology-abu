@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { sendContactMessage, initializeEmailJS } from '../../utils/emailService';
 import './Contacts.css';
 
 const Contacts = () => {
@@ -74,13 +73,18 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
-      // Инициализируем EmailJS
-      await initializeEmailJS();
-      
-      // Отправляем сообщение
-      const result = await sendContactMessage(formData);
+      // Отправляем сообщение через API endpoint
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (result.ok) {
+      const data = await response.json();
+
+      if (data.ok) {
         setStatus(t({ 
           ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
           kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
@@ -98,8 +102,8 @@ const Contacts = () => {
         setErrors({});
       } else {
         setStatus(t({ 
-          ru: `❌ ${result.message}`, 
-          kz: `❌ ${result.message}` 
+          ru: `❌ ${data.message}`, 
+          kz: `❌ ${data.message}` 
         }));
       }
     } catch (error) {

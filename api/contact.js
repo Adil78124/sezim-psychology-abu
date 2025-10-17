@@ -1,5 +1,5 @@
-// API endpoint для обработки формы контактов
-export default function handler(req, res) {
+// API endpoint для обработки формы контактов через Telegram Bot
+export default async function handler(req, res) {
   // Проверяем метод запроса
   if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -37,33 +37,56 @@ export default function handler(req, res) {
       });
     }
 
-    // Здесь можно добавить отправку email через сервис (например, EmailJS, Nodemailer, SendGrid)
-    // Пока что просто логируем данные
-    console.log('Новое сообщение с формы контактов:', {
-      name,
-      email,
-      phone: phone || 'Не указан',
-      subject,
-      message,
-      timestamp: new Date().toISOString(),
-      ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    // Получаем токен и chat_id из переменных окружения
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    // Проверяем наличие токена и chat_id
+    if (!token || !chatId) {
+      console.error('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не настроены');
+      return res.status(500).json({
+        ok: false,
+        message: 'Сервис временно недоступен. Попробуйте позже.'
+      });
+    }
+
+    // Формируем сообщение для Telegram
+    const telegramMessage = `📩 *Новое сообщение с сайта Sezim.abu*
+
+👤 *Имя:* ${name}
+📧 *Email:* ${email}
+📞 *Телефон:* ${phone || 'Не указан'}
+🎯 *Тема:* ${subject}
+
+💬 *Сообщение:*
+${message}
+
+⏰ *Время:* ${new Date().toLocaleString('ru-RU')}
+🌐 *IP:* ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'Неизвестно'}`;
+
+    // Отправляем сообщение в Telegram
+    const telegramResponse = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: telegramMessage,
+        parse_mode: 'Markdown'
+      }),
     });
 
-    // В реальном проекте здесь бы была отправка email:
-    // await sendEmail({
-    //   to: 'admin@sezim.abu.kz',
-    //   subject: `Новое сообщение: ${subject}`,
-    //   html: `
-    //     <h3>Новое сообщение с сайта Sezim.abu</h3>
-    //     <p><strong>Имя:</strong> ${name}</p>
-    //     <p><strong>Email:</strong> ${email}</p>
-    //     <p><strong>Телефон:</strong> ${phone || 'Не указан'}</p>
-    //     <p><strong>Тема:</strong> ${subject}</p>
-    //     <p><strong>Сообщение:</strong></p>
-    //     <p>${message.replace(/\n/g, '<br>')}</p>
-    //     <p><em>Отправлено: ${new Date().toLocaleString('ru-RU')}</em></p>
-    //   `
-    // });
+    const telegramData = await telegramResponse.json();
+    console.log('Telegram response:', telegramData);
+
+    if (!telegramResponse.ok) {
+      console.error('Ошибка отправки в Telegram:', telegramData);
+      return res.status(500).json({
+        ok: false,
+        message: 'Ошибка при отправке сообщения. Попробуйте еще раз.'
+      });
+    }
 
     // Успешный ответ
     return res.status(200).json({
