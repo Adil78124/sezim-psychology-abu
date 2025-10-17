@@ -1,5 +1,5 @@
 // API endpoint для обработки формы контактов через Telegram Bot
-const https = require('https');
+import https from 'https';
 
 // Функция для отправки сообщения в Telegram
 function sendToTelegram(token, chatId, text) {
@@ -45,7 +45,7 @@ function sendToTelegram(token, chatId, text) {
   });
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Добавляем CORS заголовки
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
