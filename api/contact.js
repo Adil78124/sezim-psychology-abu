@@ -1,9 +1,7 @@
-// Простейший API для Telegram - CommonJS формат
+// Максимально простой API для Telegram
 const https = require('https');
 
 module.exports = async function handler(req, res) {
-  console.log('API called:', req.method, req.url);
-  
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -14,8 +12,8 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // GET запрос - показываем тестовую страницу
   if (req.method === 'GET') {
-    // Если запрос с параметром ?test=1, показываем тестовую страницу
     if (req.url && req.url.includes('test=1')) {
       const html = `
 <!DOCTYPE html>
@@ -132,16 +130,16 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ 
       ok: true, 
       message: 'API работает!',
-      timestamp: new Date().toISOString(),
-      testUrl: '/api/contact?test=1'
+      timestamp: new Date().toISOString()
     });
   }
 
+  // POST запрос - отправляем в Telegram
   if (req.method === 'POST') {
     try {
       const { name, email, phone, subject, message, privacy } = req.body;
 
-      // Простая валидация
+      // Валидация
       if (!name || !email || !subject || !message) {
         return res.status(400).json({
           ok: false,
@@ -174,7 +172,7 @@ ${message}
 
 ⏰ Время: ${new Date().toLocaleString('ru-RU')}`;
 
-      // Отправляем в Telegram через https модуль
+      // Отправляем в Telegram
       const postData = JSON.stringify({
         chat_id: chatId,
         text: telegramMessage
@@ -228,6 +226,5 @@ ${message}
     }
   }
 
-  // Если метод не GET, POST или OPTIONS
   res.status(405).json({ ok: false, message: 'Метод не разрешен' });
 };
