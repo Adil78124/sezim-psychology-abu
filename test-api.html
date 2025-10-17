@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Тест API endpoint</h1>
+    <button onclick="testAPI()">Тест API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const testData = {
+                name: "Тест",
+                email: "test@example.com",
+                phone: "+77771234567",
+                subject: "Тестовое сообщение",
+                message: "Это тестовое сообщение",
+                privacy: true
+            };
+
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                });
+
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<h3>Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
