@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json({ 
@@ -14,5 +14,4 @@ export default async function handler(req, res) {
       stack: error.stack 
     });
   }
-}
-
+};

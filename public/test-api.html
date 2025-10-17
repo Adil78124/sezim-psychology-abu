@@ -5,15 +5,18 @@
 </head>
 <body>
     <h1>Тест API endpoint</h1>
-    <button onclick="testContactGET()">Тест GET /api/contact</button>
-    <button onclick="testContactPOST()">Тест POST /api/contact</button>
-    <button onclick="testContactPage()">Открыть тестовую страницу API</button>
+    <button onclick="testHelloCJS()">Тест /api/hello.cjs</button>
+    <button onclick="testSimpleCJS()">Тест /api/test.cjs</button>
+    <button onclick="testHello()">Тест /api/hello</button>
+    <button onclick="testSimple()">Тест /api/test</button>
+    <button onclick="testGET()">Тест GET /api/contact</button>
+    <button onclick="testPOST()">Тест POST /api/contact</button>
     <div id="result"></div>
 
     <script>
-        async function testContactGET() {
+        async function testHelloCJS() {
             try {
-                const response = await fetch('/api/contact');
+                const response = await fetch('/api/hello.cjs');
                 const text = await response.text();
                 let data;
                 try {
@@ -22,16 +25,96 @@
                     data = { error: 'Not JSON', response: text };
                 }
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact GET Результат:</h3>
+                    `<h3>Hello CJS Test Результат:</h3>
                      <p>Status: ${response.status}</p>
                      <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
             } catch (error) {
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact GET Ошибка:</h3><p>${error.message}</p>`;
+                    `<h3>Hello CJS Test Ошибка:</h3><p>${error.message}</p>`;
             }
         }
 
-        async function testContactPOST() {
+        async function testSimpleCJS() {
+            try {
+                const response = await fetch('/api/test.cjs');
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text };
+                }
+                document.getElementById('result').innerHTML = 
+                    `<h3>Simple CJS Test Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>Simple CJS Test Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testHello() {
+            try {
+                const response = await fetch('/api/hello');
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text };
+                }
+                document.getElementById('result').innerHTML = 
+                    `<h3>Hello Test Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>Hello Test Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testSimple() {
+            try {
+                const response = await fetch('/api/test');
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text };
+                }
+                document.getElementById('result').innerHTML = 
+                    `<h3>Simple Test Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>Simple Test Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testGET() {
+            try {
+                const response = await fetch('/api/contact');
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text.substring(0, 200) };
+                }
+                document.getElementById('result').innerHTML = 
+                    `<h3>GET Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>GET Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testPOST() {
             const testData = {
                 name: "Тест",
                 email: "test@example.com",
@@ -55,20 +138,16 @@
                 try {
                     data = JSON.parse(text);
                 } catch {
-                    data = { error: 'Not JSON', response: text };
+                    data = { error: 'Not JSON', response: text.substring(0, 200) };
                 }
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact POST Результат:</h3>
+                    `<h3>POST Результат:</h3>
                      <p>Status: ${response.status}</p>
                      <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
             } catch (error) {
                 document.getElementById('result').innerHTML = 
-                    `<h3>Contact POST Ошибка:</h3><p>${error.message}</p>`;
+                    `<h3>POST Ошибка:</h3><p>${error.message}</p>`;
             }
-        }
-
-        function testContactPage() {
-            window.open('/api/contact?test=1', '_blank');
         }
     </script>
 </body>

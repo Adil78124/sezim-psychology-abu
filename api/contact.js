@@ -1,248 +1,159 @@
-// Максимально простой API для Telegram
-const https = require('https');
+// API endpoint для обработки формы контактов через Telegram Bot
+import https from 'https';
 
-module.exports = function handler(req, res) {
-  // CORS
+// Функция для отправки сообщения в Telegram
+function sendToTelegram(token, chatId, text) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'Markdown'
+    });
+
+    const options = {
+      hostname: 'api.telegram.org',
+      path: `/bot${token}/sendMessage`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let responseData = '';
+
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(responseData));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    req.write(data);
+    req.end();
+  });
+}
+
+export default async function handler(req, res) {
+  // Добавляем CORS заголовки
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
+  // Обработка OPTIONS запроса для CORS
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  // GET запрос - показываем тестовую страницу
+  // Тестовый GET запрос
   if (req.method === 'GET') {
-    if (req.url && req.url.includes('test=1')) {
-      const html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Test Telegram API</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
-        button:hover { background: #0056b3; }
-        .result { margin-top: 20px; padding: 15px; border-radius: 5px; }
-        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
-    </style>
-</head>
-<body>
-    <h1>🧪 Тест Telegram API</h1>
-    
-    <h3>1. Проверка API:</h3>
-    <button onclick="testAPI()">Тест GET /api/contact</button>
-    
-    <h3>2. Отправка тестового сообщения:</h3>
-    <button onclick="sendTestMessage()">Отправить тестовое сообщение в Telegram</button>
-    
-    <h3>3. Отправка кастомного сообщения:</h3>
-    <form onsubmit="sendCustomMessage(event)">
-        <input type="text" id="name" placeholder="Имя" value="Тест" required>
-        <input type="email" id="email" placeholder="Email" value="test@example.com" required>
-        <input type="text" id="subject" placeholder="Тема" value="Тестовое сообщение" required>
-        <textarea id="message" placeholder="Сообщение" required>Это тестовое сообщение из API страницы!</textarea>
-        <button type="submit">Отправить в Telegram</button>
-    </form>
-    
-    <div id="result"></div>
-
-    <script>
-        async function testAPI() {
-            try {
-                const response = await fetch('/api/contact');
-                const data = await response.json();
-                showResult('API Test', response.status, data);
-            } catch (error) {
-                showResult('API Test', 'ERROR', { error: error.message });
-            }
-        }
-
-        async function sendTestMessage() {
-            const testData = {
-                name: "API Test",
-                email: "api@test.com",
-                phone: "+77771234567",
-                subject: "Тест из API",
-                message: "Это тестовое сообщение отправленное прямо из API!",
-                privacy: true
-            };
-
-            try {
-                const response = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(testData)
-                });
-                const data = await response.json();
-                showResult('Test Message', response.status, data);
-            } catch (error) {
-                showResult('Test Message', 'ERROR', { error: error.message });
-            }
-        }
-
-        async function sendCustomMessage(event) {
-            event.preventDefault();
-            
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value || '',
-                subject: document.getElementById('subject').value,
-                message: document.getElementById('message').value,
-                privacy: true
-            };
-
-            try {
-                const response = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                const data = await response.json();
-                showResult('Custom Message', response.status, data);
-            } catch (error) {
-                showResult('Custom Message', 'ERROR', { error: error.message });
-            }
-        }
-
-        function showResult(type, status, data) {
-            const result = document.getElementById('result');
-            const isSuccess = status === 200 && data.ok;
-            result.innerHTML = \`
-                <div class="\${isSuccess ? 'success' : 'error'}">
-                    <h4>\${type} - Status: \${status}</h4>
-                    <pre>\${JSON.stringify(data, null, 2)}</pre>
-                </div>
-            \`;
-        }
-    </script>
-</body>
-</html>`;
-      
-      res.setHeader('Content-Type', 'text/html');
-      res.status(200).send(html);
-      return;
-    }
-    
-    res.status(200).json({ 
+    return res.status(200).json({ 
       ok: true, 
-      message: 'API работает!',
+      message: 'API endpoint работает!',
       timestamp: new Date().toISOString()
     });
-    return;
   }
 
-  // POST запрос - отправляем в Telegram
-  if (req.method === 'POST') {
-    try {
-      const { name, email, phone, subject, message, privacy } = req.body;
+  // Проверяем метод запроса
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      ok: false, 
+      message: 'Метод не разрешен. Используйте POST.' 
+    });
+  }
 
-      // Валидация
-      if (!name || !email || !subject || !message) {
-        res.status(400).json({
-          ok: false,
-          message: 'Заполните все обязательные поля'
-        });
-        return;
-      }
+  try {
+    // Получаем данные из формы
+    const { name, email, phone, subject, message, privacy } = req.body;
 
-      // Получаем переменные окружения
-      const token = process.env.TELEGRAM_BOT_TOKEN;
-      const chatId = process.env.TELEGRAM_CHAT_ID;
+    // Валидация обязательных полей
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Заполните все обязательные поля'
+      });
+    }
 
-      if (!token || !chatId) {
-        console.log('Переменные окружения не найдены:', { token: !!token, chatId: !!chatId });
-        res.status(500).json({
-          ok: false,
-          message: 'Сервис временно недоступен'
-        });
-        return;
-      }
+    // Валидация email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Некорректный email адрес'
+      });
+    }
 
-      // Формируем сообщение
-      const telegramMessage = `📩 Новое сообщение с сайта Sezim.abu
+    // Проверка согласия с политикой конфиденциальности
+    if (!privacy) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Необходимо согласие с политикой конфиденциальности'
+      });
+    }
 
-👤 Имя: ${name}
-📧 Email: ${email}
-📞 Телефон: ${phone || 'Не указан'}
-🎯 Тема: ${subject}
+    // Получаем токен и chat_id из переменных окружения
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
 
-💬 Сообщение:
+    // Проверяем наличие токена и chat_id
+    if (!token || !chatId) {
+      console.error('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не настроены');
+      return res.status(500).json({
+        ok: false,
+        message: 'Сервис временно недоступен. Попробуйте позже.'
+      });
+    }
+
+    // Формируем сообщение для Telegram
+    const telegramMessage = `📩 *Новое сообщение с сайта Sezim.abu*
+
+👤 *Имя:* ${name}
+📧 *Email:* ${email}
+📞 *Телефон:* ${phone || 'Не указан'}
+🎯 *Тема:* ${subject}
+
+💬 *Сообщение:*
 ${message}
 
-⏰ Время: ${new Date().toLocaleString('ru-RU')}`;
+⏰ *Время:* ${new Date().toLocaleString('ru-RU')}
+🌐 *IP:* ${req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'Неизвестно'}`;
 
-      // Отправляем в Telegram
-      const postData = JSON.stringify({
-        chat_id: chatId,
-        text: telegramMessage
-      });
-
-      const options = {
-        hostname: 'api.telegram.org',
-        path: `/bot${token}/sendMessage`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData)
-        }
-      };
-
-      const req_telegram = https.request(options, (response) => {
-        let data = '';
-        response.on('data', (chunk) => data += chunk);
-        response.on('end', () => {
-          try {
-            const telegramResponse = JSON.parse(data);
-            console.log('Telegram response:', telegramResponse);
-
-            if (!telegramResponse.ok) {
-              res.status(500).json({
-                ok: false,
-                message: 'Ошибка отправки в Telegram: ' + JSON.stringify(telegramResponse)
-              });
-              return;
-            }
-
-            res.status(200).json({
-              ok: true,
-              message: 'Сообщение успешно отправлено!'
-            });
-          } catch (e) {
-            console.error('Parse error:', e);
-            res.status(500).json({
-              ok: false,
-              message: 'Ошибка парсинга ответа Telegram'
-            });
-          }
-        });
-      });
-      
-      req_telegram.on('error', (error) => {
-        console.error('Request error:', error);
-        res.status(500).json({
-          ok: false,
-          message: 'Ошибка запроса к Telegram: ' + error.message
-        });
-      });
-      
-      req_telegram.write(postData);
-      req_telegram.end();
-      return;
-
-    } catch (error) {
-      console.error('Ошибка:', error);
-      res.status(500).json({
+    // Отправляем сообщение в Telegram
+    const telegramData = await sendToTelegram(token, chatId, telegramMessage);
+    
+    if (!telegramData.ok) {
+      console.error('Ошибка отправки в Telegram:', telegramData);
+      return res.status(500).json({
         ok: false,
-        message: 'Ошибка при отправке сообщения: ' + error.message
+        message: 'Ошибка при отправке сообщения. Попробуйте еще раз.'
       });
-      return;
     }
-  }
 
-  res.status(405).json({ ok: false, message: 'Метод не разрешен' });
-};
+    // Успешный ответ
+    return res.status(200).json({
+      ok: true,
+      message: 'Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.'
+    });
+
+  } catch (error) {
+    console.error('Ошибка при обработке формы контактов:', error);
+    
+    return res.status(500).json({
+      ok: false,
+      message: 'Произошла ошибка при отправке сообщения. Попробуйте еще раз.'
+    });
+  }
+}
