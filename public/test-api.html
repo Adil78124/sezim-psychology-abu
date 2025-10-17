@@ -5,15 +5,42 @@
 </head>
 <body>
     <h1>Тест API endpoint</h1>
-    <button onclick="testGET()">Тест GET</button>
-    <button onclick="testPOST()">Тест POST</button>
+    <button onclick="testSimple()">Тест /api/test</button>
+    <button onclick="testGET()">Тест GET /api/contact</button>
+    <button onclick="testPOST()">Тест POST /api/contact</button>
     <div id="result"></div>
 
     <script>
+        async function testSimple() {
+            try {
+                const response = await fetch('/api/test');
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text };
+                }
+                document.getElementById('result').innerHTML = 
+                    `<h3>Simple Test Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>Simple Test Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+
         async function testGET() {
             try {
                 const response = await fetch('/api/contact');
-                const data = await response.json();
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text.substring(0, 200) };
+                }
                 document.getElementById('result').innerHTML = 
                     `<h3>GET Результат:</h3>
                      <p>Status: ${response.status}</p>
@@ -43,7 +70,13 @@
                     body: JSON.stringify(testData),
                 });
 
-                const data = await response.json();
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = { error: 'Not JSON', response: text.substring(0, 200) };
+                }
                 document.getElementById('result').innerHTML = 
                     `<h3>POST Результат:</h3>
                      <p>Status: ${response.status}</p>
