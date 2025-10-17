@@ -5,11 +5,26 @@
 </head>
 <body>
     <h1>Тест API endpoint</h1>
-    <button onclick="testAPI()">Тест API</button>
+    <button onclick="testGET()">Тест GET</button>
+    <button onclick="testPOST()">Тест POST</button>
     <div id="result"></div>
 
     <script>
-        async function testAPI() {
+        async function testGET() {
+            try {
+                const response = await fetch('/api/contact');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<h3>GET Результат:</h3>
+                     <p>Status: ${response.status}</p>
+                     <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<h3>GET Ошибка:</h3><p>${error.message}</p>`;
+            }
+        }
+
+        async function testPOST() {
             const testData = {
                 name: "Тест",
                 email: "test@example.com",
@@ -30,12 +45,12 @@
 
                 const data = await response.json();
                 document.getElementById('result').innerHTML = 
-                    `<h3>Результат:</h3>
+                    `<h3>POST Результат:</h3>
                      <p>Status: ${response.status}</p>
                      <p>Response: ${JSON.stringify(data, null, 2)}</p>`;
             } catch (error) {
                 document.getElementById('result').innerHTML = 
-                    `<h3>Ошибка:</h3><p>${error.message}</p>`;
+                    `<h3>POST Ошибка:</h3><p>${error.message}</p>`;
             }
         }
     </script>

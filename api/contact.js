@@ -1,5 +1,26 @@
 // API endpoint для обработки формы контактов через Telegram Bot
 export default async function handler(req, res) {
+  // Добавляем CORS заголовки
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  // Обработка OPTIONS запроса для CORS
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  // Тестовый GET запрос
+  if (req.method === 'GET') {
+    return res.status(200).json({ 
+      ok: true, 
+      message: 'API endpoint работает!',
+      timestamp: new Date().toISOString()
+    });
+  }
+
   // Проверяем метод запроса
   if (req.method !== 'POST') {
     return res.status(405).json({ 
