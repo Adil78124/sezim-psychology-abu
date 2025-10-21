@@ -73,8 +73,13 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
+<<<<<<< HEAD
       // API URL: для продакшн используем Vercel, для dev - локальный proxy
       const apiBase = import.meta.env.VITE_API_BASE || '';
+=======
+      // Отправляем сообщение через наш backend API
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+>>>>>>> 52a708f8c70ea4a8d8686a84cf64e6a954c5f34f
       const apiUrl = `${apiBase}/api/send`;
       
       console.log('Отправка на:', apiUrl); // Для отладки
