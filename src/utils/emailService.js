@@ -5,7 +5,7 @@
 const EMAILJS_CONFIG = {
   serviceId: 'service_xxxxxxx', // Замените на ваш Service ID
   templateId: 'template_xxxxxxx', // Замените на ваш Template ID
-  publicKey: process.env.VITE_EMAILJS_PUBLIC_KEY || 'your_public_key_here',
+  publicKey: process.env.VITE_EMAILJS_PUBLIC_KEY || 'AIzaSyBKd-3ewj9aUGirH7BhNnCV5dgPR4sfJbA',
 };
 
 // Функция для отправки сообщения
