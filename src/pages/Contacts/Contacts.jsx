@@ -77,6 +77,13 @@ const Contacts = () => {
       const apiUrl = '/api/send';
       
       console.log('Отправка на:', apiUrl); // Для отладки
+      console.log('Данные для отправки:', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || '',
+        subject: formData.subject,
+        message: formData.message,
+      });
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -92,16 +99,40 @@ const Contacts = () => {
         }),
       });
 
+      console.log('Статус ответа:', response.status);
+      console.log('Заголовки ответа:', response.headers);
+
       // Проверяем статус ответа
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Backend не запущен. Запустите: cd backend && npm start');
         }
-        const errorData = await response.json().catch(() => ({ error: 'Неизвестная ошибка' }));
-        throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+        
+        // Пытаемся получить текст ответа для диагностики
+        let errorText;
+        try {
+          errorText = await response.text();
+          console.log('Текст ошибки:', errorText);
+          
+          // Пытаемся парсить как JSON
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+        } catch (parseError) {
+          // Если не JSON, используем текст как есть
+          throw new Error(`Ошибка сервера ${response.status}: ${errorText || 'Неизвестная ошибка'}`);
+        }
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log('Ответ сервера:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Ошибка парсинга JSON:', parseError);
+        throw new Error('Сервер вернул некорректный ответ');
+      }
 
       setStatus(t({ 
         ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
@@ -121,6 +152,8 @@ const Contacts = () => {
       
     } catch (error) {
       console.error('Ошибка при отправке формы:', error);
+      console.error('Тип ошибки:', typeof error);
+      console.error('Стек ошибки:', error.stack);
       
       let errorMessage;
       if (error.message.includes('Backend не запущен')) {
@@ -132,6 +165,11 @@ const Contacts = () => {
         errorMessage = t({
           ru: '⚠️ Ошибка соединения. Проверьте интернет.',
           kz: '⚠️ Байланыс қатесі. Интернетті тексеріңіз.'
+        });
+      } else if (error.message.includes('Unexpected token')) {
+        errorMessage = t({
+          ru: '⚠️ Ошибка сервера. Попробуйте еще раз или обратитесь к администратору.',
+          kz: '⚠️ Сервер қатесі. Қайталап көріңіз немесе әкімшіге хабарласыңыз.'
         });
       } else {
         errorMessage = t({ 
