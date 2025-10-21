@@ -1,7 +1,7 @@
 // Сервис для отправки сообщений через Render API
 // Замените YOUR_RENDER_URL на ваш URL с Render
 
-const RENDER_API_URL = import.meta.env.VITE_RENDER_API_URL || 'https://psychology-backend.onrender.com';
+const RENDER_API_URL = import.meta.env.VITE_RENDER_API_URL || 'https://psychology-jmdr.onrender.com';
 
 // Функция для отправки сообщения через Render API
 export const sendContactMessage = async (formData) => {
