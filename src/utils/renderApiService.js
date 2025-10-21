@@ -1,14 +1,14 @@
-// Сервис для отправки сообщений через Render API
-// Замените YOUR_RENDER_URL на ваш URL с Render
+// Сервис для отправки сообщений через собственный API
+// Замените YOUR_DOMAIN на ваш домен
 
-const RENDER_API_URL = import.meta.env.VITE_RENDER_API_URL || 'https://psychology-jmdr.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'http://your-domain.com';
 
 // Функция для отправки сообщения через Render API
 export const sendContactMessage = async (formData) => {
   try {
     console.log('Отправка сообщения через Render API...');
     
-    const response = await fetch(`${RENDER_API_URL}/api/send`, {
+    const response = await fetch(`${API_URL}/api/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export const sendContactMessage = async (formData) => {
 // Функция для проверки статуса API
 export const checkApiHealth = async () => {
   try {
-    const response = await fetch(`${RENDER_API_URL}/api/health`);
+    const response = await fetch(`${API_URL}/api/health`);
     const result = await response.json();
     
     return {
@@ -77,7 +77,7 @@ export const checkApiHealth = async () => {
 // Функция для отправки подписки на новости
 export const subscribeToNews = async (email) => {
   try {
-    const response = await fetch(`${RENDER_API_URL}/api/subscribe`, {
+    const response = await fetch(`${API_URL}/api/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
