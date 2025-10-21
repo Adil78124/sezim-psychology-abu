@@ -16,8 +16,8 @@
 **Основные настройки:**
 - **Name:** `psychology-backend`
 - **Environment:** `Node`
-- **Build Command:** `npm install`
-- **Start Command:** `npm start`
+- **Build Command:** `npm run build:backend`
+- **Start Command:** `npm run dev:backend`
 - **Instance Type:** `Free` (для начала)
 
 ### 3. Environment Variables
