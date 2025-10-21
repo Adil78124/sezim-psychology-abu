@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { sendContactMessage } from '../../utils/renderApiService';
 import './Contacts.css';
 
 const Contacts = () => {
@@ -73,89 +74,22 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
-      // API URL: для продакшн используем Vercel API, для dev - проксируется через vite
-      const apiUrl = '/api/send';
+      // Используем новый сервис для отправки через Render API
+      const result = await sendContactMessage(formData);
       
-      console.log('Отправка на:', apiUrl); // Для отладки
-      console.log('Данные для отправки:', {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || '',
-        subject: formData.subject,
-        message: formData.message,
-      });
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || '',
-          subject: formData.subject,
-          message: formData.message,
-        }),
-      });
-
-      console.log('Статус ответа:', response.status);
-      console.log('Заголовки ответа:', response.headers);
-
-      // Проверяем статус ответа
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Backend не запущен. Запустите: cd backend && npm start');
-        }
-        
-        // Пытаемся получить текст ответа для диагностики
-        let errorText;
-        try {
-          errorText = await response.text();
-          console.log('Текст ошибки:', errorText);
-          
-          // Пытаемся парсить как JSON
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
-        } catch (parseError) {
-          // Если не JSON, используем текст как есть
-          throw new Error(`Ошибка сервера ${response.status}: ${errorText || 'Неизвестная ошибка'}`);
-        }
+      if (result.ok) {
+        setStatus(t({ ru: 'Сообщение успешно отправлено!', kz: 'Хабарлама сәтті жіберілді!' }));
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          privacy: false,
+        });
+      } else {
+        throw new Error(result.message);
       }
-
-      const responseText = await response.text();
-      console.log('Ответ сервера:', responseText);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Ошибка парсинга JSON:', parseError);
-        console.error('Полученный текст:', responseText);
-        
-        // Если получили HTML вместо JSON, это означает проблему с сервером
-        if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
-          throw new Error('Сервер вернул HTML страницу вместо JSON. Возможно, backend не запущен или есть ошибка в прокси.');
-        } else {
-          throw new Error(`Сервер вернул некорректный ответ: ${responseText.substring(0, 100)}...`);
-        }
-      }
-
-      setStatus(t({ 
-        ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
-        kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
-      }));
-      
-      // Очищаем форму
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-        privacy: false,
-      });
-      setErrors({});
       
     } catch (error) {
       console.error('Ошибка при отправке формы:', error);
