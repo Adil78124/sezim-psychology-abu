@@ -131,7 +131,14 @@ const Contacts = () => {
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error('Ошибка парсинга JSON:', parseError);
-        throw new Error('Сервер вернул некорректный ответ');
+        console.error('Полученный текст:', responseText);
+        
+        // Если получили HTML вместо JSON, это означает проблему с сервером
+        if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+          throw new Error('Сервер вернул HTML страницу вместо JSON. Возможно, backend не запущен или есть ошибка в прокси.');
+        } else {
+          throw new Error(`Сервер вернул некорректный ответ: ${responseText.substring(0, 100)}...`);
+        }
       }
 
       setStatus(t({ 
@@ -170,6 +177,11 @@ const Contacts = () => {
         errorMessage = t({
           ru: '⚠️ Ошибка сервера. Попробуйте еще раз или обратитесь к администратору.',
           kz: '⚠️ Сервер қатесі. Қайталап көріңіз немесе әкімшіге хабарласыңыз.'
+        });
+      } else if (error.message.includes('HTML страницу вместо JSON')) {
+        errorMessage = t({
+          ru: '⚠️ Backend сервер не запущен. Запустите: cd backend && npm start',
+          kz: '⚠️ Backend сервер іске қосылмаған. Іске қосыңыз: cd backend && npm start'
         });
       } else {
         errorMessage = t({ 
