@@ -7,7 +7,7 @@ import { getStorage } from "firebase/storage";
 
 // Конфигурация Firebase (данные из Firebase Console)
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSyBKd-3ewj9aUGirH7BhNnCV5dgPR4sfJbA",
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
   authDomain: "psychology-sezim.firebaseapp.com",
   projectId: "psychology-sezim",
   storageBucket: "psychology-sezim.firebasestorage.app",
