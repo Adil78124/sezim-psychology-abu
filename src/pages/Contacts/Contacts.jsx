@@ -73,48 +73,75 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
-      // Отправляем сообщение через Formspree
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('phone', formData.phone || '');
-      formDataToSend.append('subject', formData.subject);
-      formDataToSend.append('message', formData.message);
-      formDataToSend.append('privacy', formData.privacy ? 'Согласен' : 'Не согласен');
-
-      const response = await fetch('https://formspree.io/f/xnngwwzg', {
+      // API URL: для продакшн используем Vercel, для dev - локальный proxy
+      const apiBase = import.meta.env.VITE_API_BASE || '';
+      const apiUrl = `${apiBase}/api/send`;
+      
+      console.log('Отправка на:', apiUrl); // Для отладки
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        body: formDataToSend,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || '',
+          subject: formData.subject,
+          message: formData.message,
+        }),
       });
 
-      if (response.ok) {
-        setStatus(t({ 
-          ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
-          kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
-        }));
-        
-        // Очищаем форму
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          subject: '',
-          message: '',
-          privacy: false,
-        });
-        setErrors({});
-      } else {
-        setStatus(t({ 
-          ru: `❌ ${data.message}`, 
-          kz: `❌ ${data.message}` 
-        }));
+      // Проверяем статус ответа
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Backend не запущен. Запустите: cd backend && npm start');
+        }
+        const errorData = await response.json().catch(() => ({ error: 'Неизвестная ошибка' }));
+        throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
       }
+
+      const data = await response.json();
+
+      setStatus(t({ 
+        ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
+        kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
+      }));
+      
+      // Очищаем форму
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
+        privacy: false,
+      });
+      setErrors({});
+      
     } catch (error) {
       console.error('Ошибка при отправке формы:', error);
-      setStatus(t({ 
-        ru: '⚠️ Ошибка соединения. Попробуйте еще раз.', 
-        kz: '⚠️ Байланыс қатесі. Қайталап көріңіз.' 
-      }));
+      
+      let errorMessage;
+      if (error.message.includes('Backend не запущен')) {
+        errorMessage = t({
+          ru: '⚠️ Сервер не запущен. Обратитесь к администратору.',
+          kz: '⚠️ Сервер іске қосылмаған. Әкімшіге хабарласыңыз.'
+        });
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = t({
+          ru: '⚠️ Ошибка соединения. Проверьте интернет.',
+          kz: '⚠️ Байланыс қатесі. Интернетті тексеріңіз.'
+        });
+      } else {
+        errorMessage = t({ 
+          ru: `❌ ${error.message}`, 
+          kz: `❌ ${error.message}` 
+        });
+      }
+      
+      setStatus(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

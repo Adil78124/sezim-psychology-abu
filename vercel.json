@@ -1,12 +1,16 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
-  ]
+  ],
+  "env": {
+    "TELEGRAM_BOT_TOKEN": "@telegram_bot_token",
+    "TELEGRAM_CHAT_ID": "@telegram_chat_id"
+  }
 }
+
