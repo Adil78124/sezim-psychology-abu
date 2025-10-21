@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { auth, db } from "../../firebase";
+import { auth, db, storage } from "../../firebase";
 import { 
   addDoc, 
   collection, 
@@ -10,6 +10,7 @@ import {
   doc, 
   serverTimestamp 
 } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { signOut } from "firebase/auth";
 import "./AdminPanel.css";
 
@@ -24,6 +25,12 @@ export default function AdminPanel() {
   const [imageUrl, setImageUrl] = useState("");
   const [link, setLink] = useState("");
   const [addingNews, setAddingNews] = useState(false);
+  
+  // Состояния для загрузки файлов
+  const [imageMode, setImageMode] = useState("url"); // "url" или "upload"
+  const [imageFile, setImageFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (u) => {
@@ -51,6 +58,49 @@ export default function AdminPanel() {
     };
   }, []);
 
+  // Загрузка файла в Firebase Storage
+  const uploadImage = async (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error("Файл не выбран"));
+        return;
+      }
+
+      // Проверка типа файла
+      if (!file.type.startsWith('image/')) {
+        reject(new Error("Пожалуйста, выберите изображение"));
+        return;
+      }
+
+      // Создаем уникальное имя файла
+      const timestamp = Date.now();
+      const fileName = `news/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+
+      // Загружаем файл
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Прогресс загрузки
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error("Ошибка загрузки:", error);
+          reject(error);
+        },
+        async () => {
+          // Загрузка завершена, получаем URL
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setUploadProgress(0);
+          resolve(downloadURL);
+        }
+      );
+    });
+  };
+
   const addNews = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert("Нет прав");
@@ -58,18 +108,34 @@ export default function AdminPanel() {
     
     setAddingNews(true);
     try {
+      let finalImageUrl = "";
+
+      // Определяем URL изображения в зависимости от режима
+      if (imageMode === "upload" && imageFile) {
+        // Загружаем файл в Firebase Storage
+        finalImageUrl = await uploadImage(imageFile);
+      } else if (imageMode === "url" && imageUrl.trim()) {
+        // Используем введенный URL
+        finalImageUrl = imageUrl.trim();
+      }
+
       await addDoc(collection(db, "news"), {
         title,
         content,
-        imageUrl: imageUrl.trim() || null,
+        imageUrl: finalImageUrl || null,
         link: link.trim() || null,
         createdAt: serverTimestamp()
       });
       
+      // Очищаем форму
       setTitle("");
       setContent("");
       setImageUrl("");
       setLink("");
+      setImageFile(null);
+      setUploadedImageUrl("");
+      setUploadProgress(0);
+      
       alert("✅ Новость успешно добавлена!");
     } catch (error) {
       alert("Ошибка при добавлении новости: " + error.message);
@@ -171,17 +237,142 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="news-image-url">URL изображения (необязательно)</label>
-                  <input
-                    id="news-image-url"
-                    type="url"
-                    value={imageUrl}
-                    onChange={e => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  <p className="field-hint">
-                    💡 Можно загрузить на <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer">Imgur</a> или <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer">Cloudinary</a>
-                  </p>
+                  <label>Изображение (необязательно)</label>
+                  
+                  {/* Переключатель режима */}
+                  <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setImageMode("url")}
+                      className={`mode-btn ${imageMode === "url" ? "active" : ""}`}
+                      style={{
+                        padding: '8px 16px',
+                        border: imageMode === "url" ? '2px solid #667eea' : '2px solid #ddd',
+                        borderRadius: '8px',
+                        background: imageMode === "url" ? '#f0f2ff' : 'white',
+                        color: imageMode === "url" ? '#667eea' : '#666',
+                        cursor: 'pointer',
+                        fontWeight: imageMode === "url" ? 'bold' : 'normal',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      🔗 Вставить URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageMode("upload")}
+                      className={`mode-btn ${imageMode === "upload" ? "active" : ""}`}
+                      style={{
+                        padding: '8px 16px',
+                        border: imageMode === "upload" ? '2px solid #667eea' : '2px solid #ddd',
+                        borderRadius: '8px',
+                        background: imageMode === "upload" ? '#f0f2ff' : 'white',
+                        color: imageMode === "upload" ? '#667eea' : '#666',
+                        cursor: 'pointer',
+                        fontWeight: imageMode === "upload" ? 'bold' : 'normal',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      📤 Загрузить файл
+                    </button>
+                  </div>
+
+                  {/* Поле URL */}
+                  {imageMode === "url" && (
+                    <>
+                      <input
+                        id="news-image-url"
+                        type="url"
+                        value={imageUrl}
+                        onChange={e => setImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '1px solid #ddd',
+                          borderRadius: '8px',
+                          fontSize: '14px'
+                        }}
+                      />
+                      <p className="field-hint" style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
+                        💡 Можно загрузить на <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer">Imgur</a> или <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer">Cloudinary</a>
+                      </p>
+                    </>
+                  )}
+
+                  {/* Поле загрузки файла */}
+                  {imageMode === "upload" && (
+                    <>
+                      <input
+                        id="news-image-file"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          setImageFile(file);
+                          if (file) {
+                            // Показываем превью
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setUploadedImageUrl(reader.result);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px dashed #667eea',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          background: '#f8f9ff'
+                        }}
+                      />
+                      <p className="field-hint" style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
+                        📁 Выберите изображение с вашего компьютера (JPG, PNG, GIF)
+                      </p>
+
+                      {/* Превью изображения */}
+                      {uploadedImageUrl && (
+                        <div style={{ marginTop: '15px' }}>
+                          <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>Превью:</p>
+                          <img
+                            src={uploadedImageUrl}
+                            alt="Превью"
+                            style={{
+                              maxWidth: '300px',
+                              maxHeight: '200px',
+                              borderRadius: '8px',
+                              border: '1px solid #ddd'
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Прогресс-бар загрузки */}
+                      {uploadProgress > 0 && uploadProgress < 100 && (
+                        <div style={{ marginTop: '15px' }}>
+                          <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                            Загрузка: {Math.round(uploadProgress)}%
+                          </p>
+                          <div style={{
+                            width: '100%',
+                            height: '8px',
+                            background: '#e0e0e0',
+                            borderRadius: '4px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${uploadProgress}%`,
+                              height: '100%',
+                              background: 'linear-gradient(90deg, #667eea, #764ba2)',
+                              transition: 'width 0.3s'
+                            }}></div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -199,9 +390,13 @@ export default function AdminPanel() {
                 <button 
                   type="submit" 
                   className="btn btn-primary"
-                  disabled={addingNews}
+                  disabled={addingNews || (uploadProgress > 0 && uploadProgress < 100)}
                 >
-                  {addingNews ? "Добавление..." : "➕ Добавить новость"}
+                  {uploadProgress > 0 && uploadProgress < 100
+                    ? `Загрузка изображения ${Math.round(uploadProgress)}%...`
+                    : addingNews
+                    ? "Добавление новости..."
+                    : "➕ Добавить новость"}
                 </button>
               </form>
             </div>
