@@ -7,6 +7,7 @@ export default defineConfig({
   // Убираем base для Vercel
   server: {
     port: 3000,
+    open: true, // Автоматически открывать браузер
     // Proxy API requests to local backend in development
     proxy: {
       '/api': {
