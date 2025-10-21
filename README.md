@@ -11,9 +11,15 @@ npm run install:all
 
 ### Запуск всего проекта (Frontend + Backend)
 ```bash
+# Способ 1: Через скрипт (рекомендуется)
+start.bat
+
+# Способ 2: Через npm команды
+npm run dev:backend  # В одном терминале
+npm run dev          # В другом терминале
+
+# Способ 3: Через concurrently (может быть нестабильным)
 npm run dev:all
-# или просто
-npm start
 ```
 
 ### Запуск только Frontend
