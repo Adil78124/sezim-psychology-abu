@@ -11,7 +11,7 @@ export default defineConfig({
     // Proxy API requests to production backend
     proxy: {
       '/api': {
-        target: 'https://ваш-домен.com',
+        target: 'https://sezim.abu.edu.kz',
         changeOrigin: true,
         secure: true,
         // Если production backend недоступен - показываем понятную ошибку

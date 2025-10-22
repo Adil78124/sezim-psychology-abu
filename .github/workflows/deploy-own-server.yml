@@ -36,7 +36,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             # Переходим в папку проекта
-            cd /path/to/your/project
+            cd /path/to/sezim.abu.edu.kz
             
             # Получаем обновления
             git pull origin main

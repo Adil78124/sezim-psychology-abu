@@ -4,7 +4,7 @@
 echo "🚀 Начинаем деплой на собственный сервер..."
 
 # Переходим в папку проекта
-cd /path/to/your/project
+cd /path/to/sezim.abu.edu.kz
 
 # Получаем обновления
 echo "📥 Получаем обновления из GitHub..."
@@ -39,5 +39,5 @@ else
 fi
 
 echo "✅ Деплой завершен успешно!"
-echo "🌐 Frontend: http://your-domain.com"
-echo "🔧 Backend: http://your-domain.com:5000"
+echo "🌐 Frontend: https://sezim.abu.edu.kz"
+echo "🔧 Backend: https://sezim.abu.edu.kz:5000"
