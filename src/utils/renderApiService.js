@@ -1,7 +1,7 @@
 // Сервис для отправки сообщений через собственный API
 // Замените YOUR_DOMAIN на ваш домен
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://your-domain.com';
+const API_URL = import.meta.env.VITE_API_URL || 'https://ваш-домен.com';
 
 // Функция для отправки сообщения через Render API
 export const sendContactMessage = async (formData) => {
