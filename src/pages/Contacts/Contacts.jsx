@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { sendContactMessage } from '../../utils/renderApiService';
 import './Contacts.css';
 
 const Contacts = () => {
@@ -73,54 +74,27 @@ const Contacts = () => {
     setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
 
     try {
-      // API URL: для продакшн используем Vercel API, для dev - проксируется через vite
-      const apiUrl = '/api/send';
+      // Используем новый сервис для отправки через Render API
+      const result = await sendContactMessage(formData);
       
-      console.log('Отправка на:', apiUrl); // Для отладки
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || '',
-          subject: formData.subject,
-          message: formData.message,
-        }),
-      });
-
-      // Проверяем статус ответа
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Backend не запущен. Запустите: cd backend && npm start');
-        }
-        const errorData = await response.json().catch(() => ({ error: 'Неизвестная ошибка' }));
-        throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+      if (result.ok) {
+        setStatus(t({ ru: 'Сообщение успешно отправлено!', kz: 'Хабарлама сәтті жіберілді!' }));
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          privacy: false,
+        });
+      } else {
+        throw new Error(result.message);
       }
-
-      const data = await response.json();
-
-      setStatus(t({ 
-        ru: '✅ Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.', 
-        kz: '✅ Хабарлама сәтті жіберілді! Біз жақын арада сізбен хабарласамыз.' 
-      }));
-      
-      // Очищаем форму
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-        privacy: false,
-      });
-      setErrors({});
       
     } catch (error) {
       console.error('Ошибка при отправке формы:', error);
+      console.error('Тип ошибки:', typeof error);
+      console.error('Стек ошибки:', error.stack);
       
       let errorMessage;
       if (error.message.includes('Backend не запущен')) {
@@ -132,6 +106,16 @@ const Contacts = () => {
         errorMessage = t({
           ru: '⚠️ Ошибка соединения. Проверьте интернет.',
           kz: '⚠️ Байланыс қатесі. Интернетті тексеріңіз.'
+        });
+      } else if (error.message.includes('Unexpected token')) {
+        errorMessage = t({
+          ru: '⚠️ Ошибка сервера. Попробуйте еще раз или обратитесь к администратору.',
+          kz: '⚠️ Сервер қатесі. Қайталап көріңіз немесе әкімшіге хабарласыңыз.'
+        });
+      } else if (error.message.includes('HTML страницу вместо JSON')) {
+        errorMessage = t({
+          ru: '⚠️ Backend сервер не запущен. Запустите: cd backend && npm start',
+          kz: '⚠️ Backend сервер іске қосылмаған. Іске қосыңыз: cd backend && npm start'
         });
       } else {
         errorMessage = t({ 

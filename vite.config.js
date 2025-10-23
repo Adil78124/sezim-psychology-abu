@@ -7,19 +7,21 @@ export default defineConfig({
   // Убираем base для Vercel
   server: {
     port: 3000,
-    // Proxy API requests to local backend in development
+    open: true, // Автоматически открывать браузер
+    // Proxy API requests to production backend
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://sezim.abu.edu.kz',
         changeOrigin: true,
-        // Если локальный backend не запущен - ошибка будет понятной
+        secure: true,
+        // Если production backend недоступен - показываем понятную ошибку
         onError: (err, req, res) => {
           console.error('Proxy error:', err.message);
           res.writeHead(500, {
             'Content-Type': 'application/json',
           });
           res.end(JSON.stringify({
-            error: 'Локальный backend не запущен. Запустите: cd backend && npm start',
+            error: 'Backend сервер недоступен. Проверьте настройки сервера.',
             details: err.message
           }));
         }

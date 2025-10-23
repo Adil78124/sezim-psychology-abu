@@ -1,0 +1,57 @@
+name: Deploy to Own Server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm install
+          cd backend && npm install
+          
+      - name: Build frontend
+        run: npm run build
+        
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            # Переходим в папку проекта
+            cd /path/to/sezim.abu.edu.kz
+            
+            # Получаем обновления
+            git pull origin main
+            
+            # Устанавливаем зависимости
+            npm install
+            cd backend && npm install
+            
+            # Собираем фронтенд
+            npm run build
+            
+            # Перезапускаем backend
+            pm2 restart psychology-backend || pm2 start backend/index.js --name psychology-backend
+            
+            # Копируем собранный фронтенд в веб-директорию
+            cp -r dist/* /var/www/html/ || cp -r dist/* /home/user/public_html/
+            
+            echo "Deployment completed successfully!"
