@@ -15,7 +15,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "vercel-build": "vite build",
+    "vercel-build": "rm -rf node_modules package-lock.json && npm install && vite build",
     "start": "npm run dev:all",
     "install:all": "npm install && cd backend && npm install"
   },
