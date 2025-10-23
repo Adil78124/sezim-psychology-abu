@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { auth } from "../../firebase";
+import { supabase } from "../../supabaseClient";
 import Login from "../../components/Login/Login";
 import AdminPanel from "../../components/AdminPanel/AdminPanel";
+import SupabaseTest from "../../components/SupabaseTest/SupabaseTest";
 
 export default function AdminPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(u => {
-      setUser(u);
+    // Получаем текущего пользователя
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    getCurrentUser();
+
+    // Слушаем изменения аутентификации
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
       setLoading(false);
     });
-    return () => unsub();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   if (loading) {
@@ -28,6 +40,11 @@ export default function AdminPage() {
     );
   }
 
-  return user ? <AdminPanel /> : <Login onLogin={() => window.location.reload()} />;
+  return (
+    <div>
+      <SupabaseTest />
+      {user ? <AdminPanel /> : <Login onLogin={() => window.location.reload()} />}
+    </div>
+  );
 }
 

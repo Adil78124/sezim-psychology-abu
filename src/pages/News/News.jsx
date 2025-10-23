@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { db } from '../../firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { supabase } from '../../supabaseClient';
 import './News.css';
 
 const News = () => {
@@ -104,25 +103,48 @@ const News = () => {
     },
   ];
 
-  // Загружаем новости из Firestore
+  // Загружаем новости из Supabase
   useEffect(() => {
-    const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const newsFromFirestore = snapshot.docs.map(doc => ({
-        id: `firestore-${doc.id}`,
-        firestoreId: doc.id,
+    const loadNews = async () => {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Ошибка загрузки новостей:', error);
+        return;
+      }
+      
+      const newsFromSupabase = data.map(item => ({
+        id: `supabase-${item.id}`,
+        supabaseId: item.id,
         category: 'news',
-        title: { ru: doc.data().title, kz: doc.data().title },
-        date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleDateString('ru-RU') : 'Недавно',
-        description: { ru: doc.data().content, kz: doc.data().content },
-        image: doc.data().imageUrl || '/images/news-1.jpg', // используем imageUrl или дефолтное
+        title: { ru: item.title, kz: item.title },
+        date: item.created_at ? new Date(item.created_at).toLocaleDateString('ru-RU') : 'Недавно',
+        description: { ru: item.content, kz: item.content },
+        image: item.image_url || '/images/news-1.jpg',
         featured: false,
-        link: doc.data().link || null, // используем link из Firestore
+        link: item.link || null,
       }));
-      setFirestoreNews(newsFromFirestore);
-    });
+      
+      setFirestoreNews(newsFromSupabase);
+    };
 
-    return () => unsubscribe();
+    loadNews();
+
+    // Подписываемся на изменения в таблице news
+    const newsSubscription = supabase
+      .channel('news_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'news' },
+        () => {
+          loadNews(); // Перезагружаем новости при изменениях
+        }
+      )
+      .subscribe();
+
+    return () => newsSubscription.unsubscribe();
   }, []);
 
   // Объединяем статические новости с новостями из Firestore

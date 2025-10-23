@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase";
+import { supabase } from "../../supabaseClient";
 import "./Login.css";
 
 export default function Login({ onLogin }) {
@@ -14,8 +13,16 @@ export default function Login({ onLogin }) {
     setErr(null);
     setLoading(true);
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      onLogin(cred.user);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      onLogin(data.user);
     } catch (e) {
       setErr("Неверный email или пароль");
     } finally {

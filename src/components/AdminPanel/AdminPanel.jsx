@@ -1,17 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { auth, db, storage } from "../../firebase";
-import { 
-  addDoc, 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  deleteDoc, 
-  doc, 
-  serverTimestamp 
-} from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { signOut } from "firebase/auth";
+import { supabase } from "../../supabaseClient";
 import "./AdminPanel.css";
 
 export default function AdminPanel() {
@@ -33,72 +21,112 @@ export default function AdminPanel() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(async (u) => {
-      setUser(u);
-      if (!u) {
+    // Получаем текущего пользователя
+    const getCurrentUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Ошибка получения пользователя:', error);
+        setUser(null);
         setIsAdmin(false);
         setLoading(false);
         return;
       }
-      // обновляем токен и читаем claims
-      const tokenRes = await u.getIdTokenResult(true);
-      setIsAdmin(!!tokenRes.claims?.admin);
+      
+      setUser(user);
+      if (user) {
+        // Проверяем, является ли пользователь админом
+        // В Supabase это можно сделать через RLS или проверку email
+        const adminEmails = ['kairatovadil7@gmail.com', 'haval.semey@mail.ru'];
+        setIsAdmin(adminEmails.includes(user.email));
+      } else {
+        setIsAdmin(false);
+      }
       setLoading(false);
+    };
+
+    getCurrentUser();
+
+    // Слушаем изменения аутентификации
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        const adminEmails = ['kairatovadil7@gmail.com', 'haval.semey@mail.ru'];
+        setIsAdmin(adminEmails.includes(session.user.email));
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAdmin(false);
+      }
     });
 
-    // слушаем новости в реальном времени
-    const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
-    const unsubNews = onSnapshot(q, (snap) => {
-      setNews(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    // Загружаем новости из Supabase
+    const loadNews = async () => {
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Ошибка загрузки новостей:', error);
+      } else {
+        setNews(data || []);
+      }
+    };
 
-    return () => { 
-      unsub(); 
-      unsubNews(); 
+    loadNews();
+
+    // Подписываемся на изменения в таблице news
+    const newsSubscription = supabase
+      .channel('news_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'news' },
+        () => {
+          loadNews(); // Перезагружаем новости при изменениях
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription?.unsubscribe();
+      newsSubscription.unsubscribe();
     };
   }, []);
 
-  // Загрузка файла в Firebase Storage
+  // Загрузка файла в Supabase Storage
   const uploadImage = async (file) => {
-    return new Promise((resolve, reject) => {
-      if (!file) {
-        reject(new Error("Файл не выбран"));
-        return;
-      }
+    if (!file) {
+      throw new Error("Файл не выбран");
+    }
 
-      // Проверка типа файла
-      if (!file.type.startsWith('image/')) {
-        reject(new Error("Пожалуйста, выберите изображение"));
-        return;
-      }
+    // Проверка типа файла
+    if (!file.type.startsWith('image/')) {
+      throw new Error("Пожалуйста, выберите изображение");
+    }
 
+    try {
       // Создаем уникальное имя файла
       const timestamp = Date.now();
       const fileName = `news/${timestamp}_${file.name}`;
-      const storageRef = ref(storage, fileName);
 
-      // Загружаем файл
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Загружаем файл в Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('news-images')
+        .upload(fileName, file);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          // Прогресс загрузки
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error("Ошибка загрузки:", error);
-          reject(error);
-        },
-        async () => {
-          // Загрузка завершена, получаем URL
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setUploadProgress(0);
-          resolve(downloadURL);
-        }
-      );
-    });
+      if (error) {
+        throw error;
+      }
+
+      // Получаем публичный URL
+      const { data: publicUrl } = supabase.storage
+        .from('news-images')
+        .getPublicUrl(fileName);
+
+      setUploadProgress(0);
+      return publicUrl.publicUrl;
+    } catch (error) {
+      console.error("Ошибка загрузки:", error);
+      throw error;
+    }
   };
 
   const addNews = async (e) => {
@@ -112,20 +140,27 @@ export default function AdminPanel() {
 
       // Определяем URL изображения в зависимости от режима
       if (imageMode === "upload" && imageFile) {
-        // Загружаем файл в Firebase Storage
+        // Загружаем файл в Supabase Storage
         finalImageUrl = await uploadImage(imageFile);
       } else if (imageMode === "url" && imageUrl.trim()) {
         // Используем введенный URL
         finalImageUrl = imageUrl.trim();
       }
 
-      await addDoc(collection(db, "news"), {
-        title,
-        content,
-        imageUrl: finalImageUrl || null,
-        link: link.trim() || null,
-        createdAt: serverTimestamp()
-      });
+      // Добавляем новость в Supabase
+      const { error } = await supabase
+        .from('news')
+        .insert({
+          title,
+          content,
+          image_url: finalImageUrl || null,
+          link: link.trim() || null,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
       
       // Очищаем форму
       setTitle("");
@@ -150,14 +185,21 @@ export default function AdminPanel() {
     if (!window.confirm("Вы уверены, что хотите удалить эту новость?")) return;
     
     try {
-      await deleteDoc(doc(db, "news", id));
+      const { error } = await supabase
+        .from('news')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       alert("Ошибка при удалении: " + error.message);
     }
   };
 
   const logout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     window.location.reload();
   };
 
@@ -419,13 +461,13 @@ export default function AdminPanel() {
                     <div className="news-item-header">
                       <h3>{n.title}</h3>
                       <span className="news-date">
-                        {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString('ru-RU') : "Только что"}
+                        {n.created_at ? new Date(n.created_at).toLocaleString('ru-RU') : "Только что"}
                       </span>
                     </div>
                     
-                    {n.imageUrl && (
+                    {n.image_url && (
                       <div className="news-item-image">
-                        <img src={n.imageUrl} alt={n.title} />
+                        <img src={n.image_url} alt={n.title} />
                       </div>
                     )}
                     
