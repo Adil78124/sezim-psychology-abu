@@ -1,4 +1,4 @@
-name: Deploy to Own Server
+name: Build Frontend
 
 on:
   push:
@@ -28,45 +28,17 @@ jobs:
       - name: Build frontend
         run: npm run build
         
-      - name: Deploy to server
-        if: ${{ secrets.HOST != '' && secrets.USERNAME != '' && secrets.SSH_KEY != '' }}
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.PORT || 22 }}
-          script: |
-            # Переходим в папку проекта
-            cd /path/to/sezim.abu.edu.kz
-            
-            # Получаем обновления
-            git pull origin main
-            
-            # Устанавливаем зависимости
-            npm install
-            cd backend && npm install
-            
-            # Собираем фронтенд
-            npm run build
-            
-            # Перезапускаем backend
-            pm2 restart psychology-backend || pm2 start backend/index.js --name psychology-backend
-            
-            # Копируем собранный фронтенд в веб-директорию
-            cp -r dist/* /var/www/html/ || cp -r dist/* /home/user/public_html/
-            
-            echo "Deployment completed successfully!"
-            
-      - name: Skip server deployment
-        if: ${{ secrets.HOST == '' || secrets.USERNAME == '' || secrets.SSH_KEY == '' }}
+      - name: Build completed
         run: |
-          echo "⚠️ Server deployment skipped - SSH secrets not configured"
-          echo "To enable server deployment, configure these secrets in GitHub:"
-          echo "- HOST: your server IP/hostname"
-          echo "- USERNAME: your server username"
-          echo "- SSH_KEY: your private SSH key"
-          echo "- PORT: SSH port (optional, defaults to 22)"
-          echo ""
           echo "✅ Frontend build completed successfully!"
           echo "📁 Built files are in the 'dist' directory"
+          echo ""
+          echo "🚀 Deployment options:"
+          echo "1. GitHub Pages - configure in Settings → Pages"
+          echo "2. Vercel - connect repository to Vercel"
+          echo "3. Manual - download dist folder and upload to your server"
+          echo ""
+          echo "📋 Next steps:"
+          echo "1. Configure Supabase Dashboard"
+          echo "2. Run SQL script from supabase-setup.sql"
+          echo "3. Test the application"
