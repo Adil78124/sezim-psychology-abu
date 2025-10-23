@@ -9,9 +9,9 @@ rm -f package-lock.json
 echo "🗑️ Clearing npm cache..."
 npm cache clean --force
 
-# Install without optional dependencies
+# Install with optional dependencies (needed for Rollup)
 echo "📦 Installing dependencies..."
-npm install --no-optional --no-fund --no-audit
+npm install --include=optional --no-fund --no-audit
 
 # Build the project
 echo "🔨 Building project..."
