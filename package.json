@@ -15,7 +15,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "vercel-build": "rm -rf node_modules package-lock.json && npm install && vite build",
+    "vercel-build": "rm -rf node_modules package-lock.json && npm cache clean --force && npm install --no-optional && vite build",
     "start": "npm run dev:all",
     "install:all": "npm install && cd backend && npm install"
   },
@@ -32,6 +32,6 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^8.2.2",
-    "vite": "^7.1.7"
+    "vite": "^5.4.10"
   }
 }
