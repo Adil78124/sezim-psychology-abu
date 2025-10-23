@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import Login from "../../components/Login/Login";
 import AdminPanel from "../../components/AdminPanel/AdminPanel";
-import SupabaseTest from "../../components/SupabaseTest/SupabaseTest";
+import SupabaseConnectionTest from "../../components/SupabaseConnectionTest/SupabaseConnectionTest";
 
 export default function AdminPage() {
   const [user, setUser] = useState(null);
@@ -42,7 +42,7 @@ export default function AdminPage() {
 
   return (
     <div>
-      <SupabaseTest />
+      <SupabaseConnectionTest />
       {user ? <AdminPanel /> : <Login onLogin={() => window.location.reload()} />}
     </div>
   );
