@@ -1,7 +1,7 @@
 name: Deploy to GitHub Pages (DISABLED)
 
 on:
-  # Disabled due to environment protection rules
+  # Disabled - GitHub Pages not enabled in this repository
   # push:
   #   branches: [ main ]
   workflow_dispatch:
