@@ -1,7 +1,7 @@
 {
-  "buildCommand": "chmod +x build.sh && ./build.sh",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "installCommand": "rm -rf node_modules package-lock.json && npm cache clean --force && npm install --include=optional",
-  "devCommand": "npm run dev"
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "framework": "create-react-app",
+  "installCommand": "npm install",
+  "devCommand": "npm start"
 }
