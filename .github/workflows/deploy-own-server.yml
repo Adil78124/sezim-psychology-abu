@@ -31,12 +31,12 @@ jobs:
       - name: Build completed
         run: |
           echo "✅ Frontend build completed successfully!"
-          echo "📁 Built files are in the 'dist' directory"
+          echo "📁 Built files are in the 'build' directory"
           echo ""
           echo "🚀 Deployment options:"
           echo "1. GitHub Pages - configure in Settings → Pages"
           echo "2. Vercel - connect repository to Vercel"
-          echo "3. Manual - download dist folder and upload to your server"
+          echo "3. Manual - download build folder and upload to your server"
           echo ""
           echo "📋 Next steps:"
           echo "1. Configure Supabase Dashboard"
