@@ -1,7 +1,7 @@
 // Сервис для отправки сообщений через собственный API
 // Замените YOUR_DOMAIN на ваш домен
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://sezim.abu.edu.kz/';
+const API_URL = process.env.REACT_APP_API_URL || window.location.origin;
 
 // Функция для отправки сообщения через Render API
 export const sendContactMessage = async (formData) => {
