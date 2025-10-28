@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom'; // Removed unused import
 import { useLanguage } from '../../context/LanguageContext';
 import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp';
 import { testsData } from '../../data/testsData';

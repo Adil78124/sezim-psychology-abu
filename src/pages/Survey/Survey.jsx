@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom'; // Removed unused import
 import { useLanguage } from '../../context/LanguageContext';
-import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp';
+// import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp'; // Removed unused import
 import { initScrollAnimations } from '../../utils/animations';
 import TestModal from '../../components/TestModal/TestModal';
-import { testsData } from '../../data/testsData';
+// import { testsData } from '../../data/testsData'; // Removed unused import
 import './Survey.css';
 
 const Survey = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage(); // Removed unused language variable
   const [activeTest, setActiveTest] = useState(null);
 
   useEffect(() => {

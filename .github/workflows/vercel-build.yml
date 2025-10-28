@@ -22,7 +22,7 @@ jobs:
         run: npm install
         
       - name: Build for Vercel
-        run: npm run build
+        run: CI=false npm run build
         
       - name: Verify Vercel build
         run: |

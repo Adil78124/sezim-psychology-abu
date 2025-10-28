@@ -108,7 +108,7 @@ export default function AdminPanel() {
       const fileName = `news/${timestamp}_${file.name}`;
 
       // Загружаем файл в Supabase Storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('news-images')
         .upload(fileName, file);
 

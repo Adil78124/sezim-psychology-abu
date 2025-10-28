@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom'; // Removed unused import
 import { useLanguage } from '../../context/LanguageContext';
-import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp';
+// import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp'; // Removed unused import
 import { initScrollAnimations } from '../../utils/animations';
 import './Students.css';
 
