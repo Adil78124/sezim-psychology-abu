@@ -44,8 +44,9 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "https://anubizze.github.io/psychology",
+  "homepage": "/",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "gh-pages": "^6.1.1"
   }
 }

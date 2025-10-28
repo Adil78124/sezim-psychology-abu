@@ -1,7 +1,6 @@
-// Vercel Serverless Function для отправки сообщений в Telegram
-import https from 'https';
+const https = require('https');
 
-// Функция для отправки в Telegram
+// Функция для отправки сообщения в Telegram
 function sendToTelegram(token, chatId, text) {
   return new Promise((resolve, reject) => {
     const params = new URLSearchParams({
@@ -49,62 +48,55 @@ function sendToTelegram(token, chatId, text) {
   });
 }
 
-export default async function handler(req, res) {
-  // CORS headers
+module.exports = async (req, res) => {
+  // Настройка CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
 
-  // Handle OPTIONS preflight
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
-  // Health check
-  if (req.method === 'GET') {
-    return res.status(200).json({
-      ok: true,
-      status: 'Telegram API работает!',
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Only POST allowed
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const { email, subject, message, name, phone } = req.body || {};
+  
+  // Валидация обязательных полей
+  if (!email || !subject || !message) {
+    return res.status(400).json({ 
+      error: "Поля email, subject и message обязательны" 
+    });
+  }
+
+  // Валидация email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ 
+      error: "Некорректный email адрес" 
+    });
+  }
+
+  // Получаем переменные окружения
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+  // Проверка настроек Telegram
+  if (!BOT_TOKEN || !CHAT_ID) {
+    return res.status(500).json({ 
+      error: "Telegram не настроен на сервере" 
+    });
+  }
+
   try {
-    const { email, subject, message, name, phone } = req.body || {};
-
-    // Validation
-    if (!email || !subject || !message) {
-      return res.status(400).json({
-        error: 'Поля email, subject и message обязательны'
-      });
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        error: 'Некорректный email адрес'
-      });
-    }
-
-    // Get Telegram credentials from environment
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-
-    if (!BOT_TOKEN || !CHAT_ID) {
-      console.error('Telegram credentials not configured');
-      return res.status(500).json({
-        error: 'Сервис временно недоступен'
-      });
-    }
-
-    // Format message
+    // Формируем сообщение для Telegram
     const telegramMessage = `📩 Новое сообщение с сайта Sezim Psychology
 
 👤 Имя: ${name || 'Не указано'}
@@ -116,23 +108,20 @@ ${message}
 
 ⏰ Время: ${new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Almaty' })}`;
 
-    // Send to Telegram
-    await sendToTelegram(BOT_TOKEN, CHAT_ID, telegramMessage);
-
-    console.log('✅ Message sent to Telegram');
-    console.log(`   From: ${name || 'Anonymous'} (${email})`);
-
-    return res.status(200).json({
-      ok: true,
-      message: 'Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.'
+    // Отправляем в Telegram
+    const result = await sendToTelegram(BOT_TOKEN, CHAT_ID, telegramMessage);
+    
+    return res.json({ 
+      ok: true, 
+      message: 'Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.',
+      telegramMessageId: result.result.message_id
     });
-
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-    return res.status(500).json({
-      error: 'Не удалось отправить сообщение',
-      details: error.message
+    
+  } catch (err) {
+    console.error("❌ Ошибка отправки в Telegram:", err.message);
+    return res.status(500).json({ 
+      error: "Не удалось отправить сообщение", 
+      details: err.message 
     });
   }
-}
-
+};

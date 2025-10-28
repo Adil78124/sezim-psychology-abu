@@ -1,7 +1,6 @@
 # Ignore backend files for frontend deployment
 backend/
 *.md
-.github/
 .git/
 node_modules/
 .env.local
