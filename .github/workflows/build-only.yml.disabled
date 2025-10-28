@@ -15,16 +15,42 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
           cache: 'npm'
           
       - name: Install dependencies
+        run: npm ci
+        
+      - name: Verify public folder
         run: |
-          rm -rf node_modules package-lock.json
-          npm install
+          echo "📁 Checking public folder contents:"
+          ls -la public/
+          echo ""
+          echo "📄 Checking if index.html exists:"
+          if [ -f "public/index.html" ]; then
+            echo "✅ index.html found in public/"
+            head -5 public/index.html
+          else
+            echo "❌ index.html NOT found in public/"
+            exit 1
+          fi
         
       - name: Build
         run: npm run build
+        
+      - name: Verify build output
+        run: |
+          echo "📁 Checking build folder contents:"
+          ls -la build/
+          echo ""
+          echo "📄 Checking if index.html exists in build:"
+          if [ -f "build/index.html" ]; then
+            echo "✅ index.html found in build/"
+            head -5 build/index.html
+          else
+            echo "❌ index.html NOT found in build/"
+            exit 1
+          fi
         
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
