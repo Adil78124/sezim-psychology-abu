@@ -15,6 +15,7 @@ export default function AdminPanel() {
   const [link, setLink] = useState("");
   const [isMain, setIsMain] = useState(false);
   const [addingNews, setAddingNews] = useState(false);
+  const [editingId, setEditingId] = useState(null); // ID новости, которую редактируем
   
   // Состояния для загрузки файлов
   const [imageMode, setImageMode] = useState("url"); // "url" или "upload"
@@ -154,7 +155,8 @@ export default function AdminPanel() {
         const { error: updateError } = await supabase
           .from('news')
           .update({ is_main: false })
-          .eq('is_main', true);
+          .eq('is_main', true)
+          .neq('id', editingId || 0); // Исключаем текущую редактируемую новость
         
         if (updateError) {
           console.error('Ошибка обновления главной новости:', updateError);
@@ -162,41 +164,83 @@ export default function AdminPanel() {
         }
       }
 
-      // Добавляем новость в Supabase
-      const { error } = await supabase
-        .from('news')
-        .insert({
-          title,
-          short_content: shortContent,
-          full_content: fullContent,
-          image_url: finalImageUrl || null,
-          link: link.trim() || null,
-          is_main: isMain,
-          created_at: new Date().toISOString()
-        });
+      const newsData = {
+        title,
+        short_content: shortContent,
+        full_content: fullContent,
+        link: link.trim() || null,
+        is_main: isMain,
+      };
+
+      // Если указан URL изображения, добавляем его
+      if (finalImageUrl) {
+        newsData.image_url = finalImageUrl;
+      }
+
+      let error;
+      if (editingId) {
+        // Обновляем существующую новость
+        const { error: updateError } = await supabase
+          .from('news')
+          .update(newsData)
+          .eq('id', editingId);
+        error = updateError;
+      } else {
+        // Добавляем новую новость
+        newsData.created_at = new Date().toISOString();
+        const { error: insertError } = await supabase
+          .from('news')
+          .insert(newsData);
+        error = insertError;
+      }
 
       if (error) {
         throw error;
       }
       
       // Очищаем форму
-      setTitle("");
-      setShortContent("");
-      setFullContent("");
-      setImageUrl("");
-      setLink("");
-      setIsMain(false);
-      setImageFile(null);
-      setUploadedImageUrl("");
-      setUploadProgress(0);
+      resetForm();
       
-      alert("✅ Новость успешно добавлена!");
+      alert(editingId ? "✅ Новость успешно обновлена!" : "✅ Новость успешно добавлена!");
     } catch (error) {
-      alert("Ошибка при добавлении новости: " + error.message);
+      alert(`Ошибка при ${editingId ? 'обновлении' : 'добавлении'} новости: ` + error.message);
       console.error(error);
     } finally {
       setAddingNews(false);
     }
+  };
+
+  // Функция для загрузки новости в форму редактирования
+  const editNews = (newsItem) => {
+    setEditingId(newsItem.id);
+    setTitle(newsItem.title || "");
+    setShortContent(newsItem.short_content || newsItem.content || "");
+    setFullContent(newsItem.full_content || newsItem.content || "");
+    setImageUrl(newsItem.image_url || "");
+    setLink(newsItem.link || "");
+    setIsMain(newsItem.is_main || false);
+    setImageMode("url"); // Сбрасываем режим загрузки
+    setImageFile(null);
+    setUploadedImageUrl("");
+    setUploadProgress(0);
+    
+    // Прокручиваем к форме
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Функция для очистки формы (отмена редактирования)
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setShortContent("");
+    setFullContent("");
+    setImageUrl("");
+    setLink("");
+    setIsMain(false);
+    setImageMode("url");
+    setImageFile(null);
+    setUploadedImageUrl("");
+    setUploadProgress(0);
   };
 
   const remove = async (id) => {
@@ -299,9 +343,23 @@ export default function AdminPanel() {
 
       <div className="admin-content">
         <div className="container">
-          {/* Форма добавления новости */}
+          {/* Форма добавления/редактирования новости */}
           <section className="admin-section">
-            <h2 className="section-title">Добавить новость</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 className="section-title">
+                {editingId ? '✏️ Редактировать новость' : '➕ Добавить новость'}
+              </h2>
+              {editingId && (
+                <button 
+                  type="button"
+                  onClick={resetForm}
+                  className="btn btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '14px' }}
+                >
+                  ❌ Отменить редактирование
+                </button>
+              )}
+            </div>
             <div className="add-news-card">
               <form onSubmit={addNews} className="news-form">
                 <div className="form-group">
@@ -522,8 +580,8 @@ export default function AdminPanel() {
                   {uploadProgress > 0 && uploadProgress < 100
                     ? `Загрузка изображения ${Math.round(uploadProgress)}%...`
                     : addingNews
-                    ? "Добавление новости..."
-                    : "➕ Добавить новость"}
+                    ? (editingId ? "Сохранение изменений..." : "Добавление новости...")
+                    : (editingId ? "💾 Сохранить изменения" : "➕ Добавить новость")}
                 </button>
               </form>
             </div>
@@ -567,8 +625,25 @@ export default function AdminPanel() {
                     )}
                     
                     <div className="news-actions">
+                      <button 
+                        onClick={() => editNews(n)} 
+                        className="btn-secondary"
+                        style={{ 
+                          marginRight: '10px',
+                          padding: '8px 16px',
+                          background: '#ff9800',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ✏️ Редактировать
+                      </button>
                       {n.is_main ? (
                         <span style={{ 
+                          marginRight: '10px',
                           padding: '8px 16px', 
                           background: '#4CAF50', 
                           color: 'white', 
