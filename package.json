@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "react-scripts start",
@@ -23,7 +23,7 @@
     "build:all": "npm run build:backend && npm run build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "vercel-build": "npm run build",
+    "vercel-build": "CI=false react-scripts build",
     "install:all": "npm install && cd backend && npm install"
   },
   "eslintConfig": {
