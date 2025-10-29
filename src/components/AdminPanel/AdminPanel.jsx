@@ -13,6 +13,7 @@ export default function AdminPanel() {
   const [fullContent, setFullContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [link, setLink] = useState("");
+  const [isMain, setIsMain] = useState(false);
   const [addingNews, setAddingNews] = useState(false);
   
   // Состояния для загрузки файлов
@@ -148,6 +149,19 @@ export default function AdminPanel() {
         finalImageUrl = imageUrl.trim();
       }
 
+      // Если эта новость должна быть главной, сбрасываем главную у всех остальных
+      if (isMain) {
+        const { error: updateError } = await supabase
+          .from('news')
+          .update({ is_main: false })
+          .eq('is_main', true);
+        
+        if (updateError) {
+          console.error('Ошибка обновления главной новости:', updateError);
+          // Продолжаем все равно
+        }
+      }
+
       // Добавляем новость в Supabase
       const { error } = await supabase
         .from('news')
@@ -157,6 +171,7 @@ export default function AdminPanel() {
           full_content: fullContent,
           image_url: finalImageUrl || null,
           link: link.trim() || null,
+          is_main: isMain,
           created_at: new Date().toISOString()
         });
 
@@ -170,6 +185,7 @@ export default function AdminPanel() {
       setFullContent("");
       setImageUrl("");
       setLink("");
+      setIsMain(false);
       setImageFile(null);
       setUploadedImageUrl("");
       setUploadProgress(0);
@@ -198,6 +214,37 @@ export default function AdminPanel() {
       }
     } catch (error) {
       alert("Ошибка при удалении: " + error.message);
+    }
+  };
+
+  const setAsMain = async (id) => {
+    if (!isAdmin) return alert("Нет прав");
+    if (!window.confirm("Сделать эту новость главной? Прежняя главная новость станет обычной.")) return;
+    
+    try {
+      // Сначала сбрасываем главную у всех новостей
+      const { error: updateError } = await supabase
+        .from('news')
+        .update({ is_main: false })
+        .eq('is_main', true);
+      
+      if (updateError) {
+        console.error('Ошибка сброса главной новости:', updateError);
+      }
+
+      // Теперь устанавливаем эту новость как главную
+      const { error } = await supabase
+        .from('news')
+        .update({ is_main: true })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      alert("✅ Новость теперь главная!");
+    } catch (error) {
+      alert("Ошибка при установке главной новости: " + error.message);
     }
   };
 
@@ -298,6 +345,21 @@ export default function AdminPanel() {
                   />
                   <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
                     💡 Совет: Можете использовать несколько абзацев для лучшей читаемости текста
+                  </small>
+                </div>
+
+                <div className="form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={isMain}
+                      onChange={(e) => setIsMain(e.target.checked)}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                    <span style={{ fontWeight: '500' }}>⭐ Сделать главной новостью</span>
+                  </label>
+                  <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block', marginLeft: '28px' }}>
+                    💡 Если отметить, эта новость будет отображаться как главная на главной странице. Прежняя главная новость автоматически станет обычной.
                   </small>
                 </div>
 
@@ -505,6 +567,35 @@ export default function AdminPanel() {
                     )}
                     
                     <div className="news-actions">
+                      {n.is_main ? (
+                        <span style={{ 
+                          padding: '8px 16px', 
+                          background: '#4CAF50', 
+                          color: 'white', 
+                          borderRadius: '8px',
+                          fontWeight: 'bold',
+                          fontSize: '14px'
+                        }}>
+                          ⭐ Главная новость
+                        </span>
+                      ) : (
+                        <button 
+                          onClick={() => setAsMain(n.id)} 
+                          className="btn-secondary"
+                          style={{ 
+                            marginRight: '10px',
+                            padding: '8px 16px',
+                            background: '#667eea',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '14px'
+                          }}
+                        >
+                          ⭐ Сделать главной
+                        </button>
+                      )}
                       <button 
                         onClick={() => remove(n.id)} 
                         className="btn-delete"

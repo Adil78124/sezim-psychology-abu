@@ -124,7 +124,7 @@ const News = () => {
         date: item.created_at ? new Date(item.created_at).toLocaleDateString('ru-RU') : 'Недавно',
         description: { ru: item.short_content || item.content || '', kz: item.short_content || item.content || '' },
         image: item.image_url || '/images/news-1.jpg',
-        featured: false,
+        featured: item.is_main || false,
         link: item.link || null,
       }));
       
@@ -154,7 +154,8 @@ const News = () => {
     (item) => activeFilter === 'all' || item.category === activeFilter
   );
 
-  const featuredNews = newsData.find((item) => item.featured);
+  // Ищем главную новость - сначала в Supabase (приоритет), потом в статических
+  const featuredNews = firestoreNews.find((item) => item.featured) || newsData.find((item) => item.featured);
   const regularNews = filteredNews.filter((item) => !item.featured);
 
   const getCategoryBadge = (category) => {
