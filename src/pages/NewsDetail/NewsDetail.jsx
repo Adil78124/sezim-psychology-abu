@@ -655,6 +655,7 @@ const NewsDetail = () => {
   ];
 
   // Загружаем новость из Supabase или статического массива
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const loadNews = async () => {
       setLoading(true);
