@@ -267,15 +267,19 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="news-content">Содержание</label>
+                  <label htmlFor="news-content">Содержание (полный текст для страницы "Подробнее")</label>
                   <textarea
                     id="news-content"
                     value={content}
                     onChange={e => setContent(e.target.value)}
-                    placeholder="Введите текст новости"
-                    rows="6"
+                    placeholder="Введите полный текст новости. Этот текст будет отображаться на странице с подробной информацией о новости."
+                    rows="15"
                     required
+                    style={{ minHeight: '300px', fontSize: '14px' }}
                   />
+                  <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                    💡 Совет: Можете использовать несколько абзацев для лучшей читаемости текста
+                  </small>
                 </div>
 
                 <div className="form-group">

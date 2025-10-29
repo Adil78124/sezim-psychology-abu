@@ -1,12 +1,17 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { supabase } from '../../supabaseClient';
 import './NewsDetail.css';
 
 const NewsDetail = () => {
   const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
+  const [news, setNews] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Статические новости для обратной совместимости
   const newsData = [
     {
       id: 1,
@@ -649,7 +654,73 @@ const NewsDetail = () => {
     },
   ];
 
-  const news = newsData.find((item) => item.id === parseInt(id));
+  // Загружаем новость из Supabase или статического массива
+  useEffect(() => {
+    const loadNews = async () => {
+      setLoading(true);
+      
+      // Проверяем, если ID начинается с "supabase-", загружаем из Supabase
+      if (id && id.startsWith('supabase-')) {
+        const supabaseId = id.replace('supabase-', '');
+        const { data, error } = await supabase
+          .from('news')
+          .select('*')
+          .eq('id', supabaseId)
+          .single();
+        
+        if (error) {
+          console.error('Ошибка загрузки новости:', error);
+          // Пробуем найти в статических данных
+          const staticNews = newsData.find((item) => item.id === parseInt(id));
+          setNews(staticNews);
+        } else if (data) {
+          // Преобразуем данные из Supabase в формат компонента
+          setNews({
+            id: `supabase-${data.id}`,
+            supabaseId: data.id,
+            category: 'news',
+            title: { ru: data.title, kz: data.title },
+            date: data.created_at ? new Date(data.created_at).toLocaleDateString('ru-RU') : 'Недавно',
+            description: { ru: data.content?.substring(0, 200) || '', kz: data.content?.substring(0, 200) || '' },
+            fullContent: { ru: data.content || '', kz: data.content || '' },
+            image: data.image_url || '/images/news-1.jpg',
+            featured: false,
+            link: data.link || null,
+          });
+        }
+      } else {
+        // Ищем в статическом массиве
+        const staticNews = newsData.find((item) => item.id === parseInt(id));
+        setNews(staticNews);
+      }
+      
+      setLoading(false);
+    };
+
+    loadNews();
+  }, [id]);
+
+  const getCategoryBadge = (category) => {
+    const badges = {
+      news: { ru: 'Новость', kz: 'Жаңалық' },
+      events: { ru: 'Мероприятие', kz: 'Іс-шара' },
+      articles: { ru: 'Статья', kz: 'Мақала' },
+    };
+    return t(badges[category] || { ru: 'Новость', kz: 'Жаңалық' });
+  };
+
+  if (loading) {
+    return (
+      <div className="news-detail-page">
+        <div className="container">
+          <div className="news-loading">
+            <div className="loading-spinner"></div>
+            <p>{t({ ru: 'Загрузка...', kz: 'Жүктелуде...' })}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!news) {
     return (
@@ -665,15 +736,6 @@ const NewsDetail = () => {
       </div>
     );
   }
-
-  const getCategoryBadge = (category) => {
-    const badges = {
-      news: { ru: 'Новость', kz: 'Жаңалық' },
-      events: { ru: 'Мероприятие', kz: 'Іс-шара' },
-      articles: { ru: 'Статья', kz: 'Мақала' },
-    };
-    return t(badges[category]);
-  };
 
   return (
     <div className="news-detail-page">
@@ -703,10 +765,13 @@ const NewsDetail = () => {
           </div>
 
           {/* News Content */}
-          <div 
-            className="news-detail-content"
-            dangerouslySetInnerHTML={{ __html: t(news.fullContent) }}
-          />
+          <div className="news-detail-content">
+            {news.fullContent && typeof t(news.fullContent) === 'string' && t(news.fullContent).includes('<') ? (
+              <div dangerouslySetInnerHTML={{ __html: t(news.fullContent) }} />
+            ) : (
+              <div style={{ whiteSpace: 'pre-wrap' }}>{t(news.fullContent || news.description)}</div>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="news-detail-actions">
