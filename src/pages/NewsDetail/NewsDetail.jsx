@@ -676,14 +676,16 @@ const NewsDetail = () => {
           setNews(staticNews);
         } else if (data) {
           // Преобразуем данные из Supabase в формат компонента
+          const shortText = data.short_content || data.content || '';
+          const fullText = data.full_content || data.content || '';
           setNews({
             id: `supabase-${data.id}`,
             supabaseId: data.id,
             category: 'news',
             title: { ru: data.title, kz: data.title },
             date: data.created_at ? new Date(data.created_at).toLocaleDateString('ru-RU') : 'Недавно',
-            description: { ru: data.content?.substring(0, 200) || '', kz: data.content?.substring(0, 200) || '' },
-            fullContent: { ru: data.content || '', kz: data.content || '' },
+            description: { ru: shortText.substring(0, 200) || '', kz: shortText.substring(0, 200) || '' },
+            fullContent: { ru: fullText, kz: fullText },
             image: data.image_url || '/images/news-1.jpg',
             featured: false,
             link: data.link || null,

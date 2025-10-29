@@ -9,7 +9,8 @@ export default function AdminPanel() {
 
   const [news, setNews] = useState([]);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [shortContent, setShortContent] = useState("");
+  const [fullContent, setFullContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [link, setLink] = useState("");
   const [addingNews, setAddingNews] = useState(false);
@@ -132,7 +133,7 @@ export default function AdminPanel() {
   const addNews = async (e) => {
     e.preventDefault();
     if (!isAdmin) return alert("Нет прав");
-    if (!title || !content) return alert("Заполните все поля");
+    if (!title || !shortContent || !fullContent) return alert("Заполните все поля");
     
     setAddingNews(true);
     try {
@@ -152,7 +153,8 @@ export default function AdminPanel() {
         .from('news')
         .insert({
           title,
-          content,
+          short_content: shortContent,
+          full_content: fullContent,
           image_url: finalImageUrl || null,
           link: link.trim() || null,
           created_at: new Date().toISOString()
@@ -164,7 +166,8 @@ export default function AdminPanel() {
       
       // Очищаем форму
       setTitle("");
-      setContent("");
+      setShortContent("");
+      setFullContent("");
       setImageUrl("");
       setLink("");
       setImageFile(null);
@@ -267,11 +270,27 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="news-content">Содержание (полный текст для страницы "Подробнее")</label>
+                  <label htmlFor="news-short-content">Короткое описание (для карточки новости)</label>
                   <textarea
-                    id="news-content"
-                    value={content}
-                    onChange={e => setContent(e.target.value)}
+                    id="news-short-content"
+                    value={shortContent}
+                    onChange={e => setShortContent(e.target.value)}
+                    placeholder="Введите краткое описание новости (2-3 предложения). Этот текст будет отображаться в карточке новости на главной странице."
+                    rows="4"
+                    required
+                    style={{ minHeight: '100px', fontSize: '14px' }}
+                  />
+                  <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                    💡 Используется для краткого превью в списке новостей
+                  </small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="news-full-content">Полное содержание (для страницы "Подробнее")</label>
+                  <textarea
+                    id="news-full-content"
+                    value={fullContent}
+                    onChange={e => setFullContent(e.target.value)}
                     placeholder="Введите полный текст новости. Этот текст будет отображаться на странице с подробной информацией о новости."
                     rows="15"
                     required
@@ -475,7 +494,7 @@ export default function AdminPanel() {
                       </div>
                     )}
                     
-                    <p className="news-text">{n.content}</p>
+                    <p className="news-text">{n.short_content || n.content || 'Нет описания'}</p>
                     
                     {n.link && (
                       <div className="news-item-link">

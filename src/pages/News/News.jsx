@@ -122,7 +122,7 @@ const News = () => {
         category: 'news',
         title: { ru: item.title, kz: item.title },
         date: item.created_at ? new Date(item.created_at).toLocaleDateString('ru-RU') : 'Недавно',
-        description: { ru: item.content, kz: item.content },
+        description: { ru: item.short_content || item.content || '', kz: item.short_content || item.content || '' },
         image: item.image_url || '/images/news-1.jpg',
         featured: false,
         link: item.link || null,
