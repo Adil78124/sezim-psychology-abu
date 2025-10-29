@@ -94,6 +94,38 @@ export default function AdminPanel() {
     };
   }, []);
 
+  // Функция для создания безопасного имени файла (без кириллицы, пробелов и спецсимволов)
+  const getSafeFileName = (originalName) => {
+    // Получаем расширение файла
+    const extension = originalName.substring(originalName.lastIndexOf('.'));
+    
+    // Удаляем расширение из имени
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    
+    // Нормализуем имя: транслитерация кириллицы, замена пробелов и спецсимволов на подчеркивания
+    const transliterate = (str) => {
+      const ru = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+      const en = 'abvgdeezziyklmnoprstufhccss_y_eua';
+      
+      return str.toLowerCase().split('').map(char => {
+        const index = ru.indexOf(char);
+        return index !== -1 ? en[index] : char;
+      }).join('');
+    };
+    
+    // Транслитерация и очистка
+    const safeName = transliterate(nameWithoutExt)
+      .replace(/[^\w.-]/g, '_') // Заменяем все не-латинские, нецифровые символы (кроме . -) на _
+      .replace(/_+/g, '_') // Заменяем множественные подчеркивания одним
+      .replace(/^_|_$/g, '') // Убираем подчеркивания в начале и конце
+      .toLowerCase();
+    
+    // Если имя пустое, используем "image"
+    const finalName = safeName || 'image';
+    
+    return `${finalName}${extension}`;
+  };
+
   // Загрузка файла в Supabase Storage
   const uploadImage = async (file) => {
     if (!file) {
@@ -106,9 +138,10 @@ export default function AdminPanel() {
     }
 
     try {
-      // Создаем уникальное имя файла
+      // Создаем уникальное имя файла с нормализованным именем
       const timestamp = Date.now();
-      const fileName = `news/${timestamp}_${file.name}`;
+      const safeFileName = getSafeFileName(file.name);
+      const fileName = `news/${timestamp}_${safeFileName}`;
 
       // Загружаем файл в Supabase Storage
       const { error } = await supabase.storage
