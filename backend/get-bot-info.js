@@ -1,7 +1,15 @@
 const https = require('https');
+require('dotenv').config({ path: './backend/.env' });
 
-// Ваш токен бота
-const BOT_TOKEN = '7982241397:AAGzinVEu6w_BgUrTOy2PPyEtyfssMVKJvU';
+// Получаем токен бота из переменных окружения
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+
+if (!BOT_TOKEN) {
+  console.error('❌ Ошибка: TELEGRAM_BOT_TOKEN не найден в переменных окружения');
+  console.log('📝 Создайте файл backend/.env и добавьте:');
+  console.log('TELEGRAM_BOT_TOKEN=your_bot_token_here');
+  process.exit(1);
+}
 
 console.log('🤖 Получаем информацию о боте...');
 

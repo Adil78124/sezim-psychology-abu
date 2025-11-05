@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Frontend сервис (Production)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: psychology-frontend-prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # Backend сервис (Production)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: psychology-backend-prod
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - FRONTEND_URL=http://localhost:3000
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+

@@ -19,7 +19,7 @@ if %errorlevel% equ 0 (
     echo ✅ Frontend сервер работает на порту 3000
 ) else (
     echo ❌ Frontend сервер НЕ работает на порту 3000
-    echo    Запустите: npm run dev
+    echo    Запустите: cd frontend ^&^& npm run dev
 )
 
 echo.

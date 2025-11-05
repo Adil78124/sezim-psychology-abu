@@ -14,7 +14,11 @@ set /p choice="Введите номер (1-6): "
 
 if "%choice%"=="1" (
     echo 📦 Устанавливаем зависимости...
+    echo 📦 Устанавливаем Frontend зависимости...
+    cd frontend
     npm install
+    cd ..
+    echo 📦 Устанавливаем Backend зависимости...
     cd backend
     npm install
     cd ..
@@ -31,9 +35,9 @@ if "%choice%"=="2" (
     echo.
     echo Нажмите Ctrl+C для остановки серверов
     echo.
-    start "Backend" cmd /k "npm run dev:backend"
+    start "Backend" cmd /k "cd backend && npm run dev"
     timeout /t 3 /nobreak >nul
-    start "Frontend" cmd /k "npm run dev"
+    start "Frontend" cmd /k "cd frontend && npm run dev"
     echo ✅ Серверы запущены в отдельных окнах!
     pause
     goto :start
@@ -41,19 +45,28 @@ if "%choice%"=="2" (
 
 if "%choice%"=="3" (
     echo 🎨 Запускаем только Frontend...
+    cd frontend
     npm run dev
     goto :end
 )
 
 if "%choice%"=="4" (
     echo ⚙️ Запускаем только Backend...
-    npm run dev:backend
+    cd backend
+    npm run dev
     goto :end
 )
 
 if "%choice%"=="5" (
     echo 🔨 Собираем проект...
-    npm run build:all
+    echo 🔨 Собираем Frontend...
+    cd frontend
+    npm run build
+    cd ..
+    echo 🔨 Собираем Backend...
+    cd backend
+    npm run build
+    cd ..
     echo ✅ Проект собран!
     pause
     goto :start

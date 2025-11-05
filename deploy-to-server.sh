@@ -12,17 +12,19 @@ git pull origin main
 
 # Устанавливаем зависимости
 echo "📦 Устанавливаем зависимости..."
-npm install
+echo "📦 Устанавливаем Frontend зависимости..."
+cd frontend && npm install && cd ..
+echo "📦 Устанавливаем Backend зависимости..."
 cd backend && npm install && cd ..
 
 # Собираем фронтенд
 echo "🔨 Собираем фронтенд..."
-npm run build
+cd frontend && npm run build && cd ..
 
 # Перезапускаем backend (если используете PM2)
 echo "🔄 Перезапускаем backend..."
 if command -v pm2 &> /dev/null; then
-    pm2 restart psychology-backend || pm2 start backend/index.js --name psychology-backend
+    pm2 restart psychology-backend || pm2 start ecosystem.config.js
 else
     # Если PM2 не установлен, запускаем через systemd или другой процесс-менеджер
     sudo systemctl restart psychology-backend || echo "⚠️ Не удалось перезапустить сервис"
@@ -31,11 +33,11 @@ fi
 # Копируем собранный фронтенд в веб-директорию
 echo "📁 Копируем файлы фронтенда..."
 if [ -d "/var/www/html" ]; then
-    sudo cp -r dist/* /var/www/html/
+    sudo cp -r frontend/build/* /var/www/html/
 elif [ -d "/home/$USER/public_html" ]; then
-    cp -r dist/* /home/$USER/public_html/
+    cp -r frontend/build/* /home/$USER/public_html/
 else
-    echo "⚠️ Не найдена веб-директория. Скопируйте файлы из папки dist/ вручную."
+    echo "⚠️ Не найдена веб-директория. Скопируйте файлы из папки frontend/build/ вручную."
 fi
 
 echo "✅ Деплой завершен успешно!"

@@ -1,52 +1,25 @@
 {
-  "name": "sezim-psychology-react",
+  "name": "sezim-psychology-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Центр психологической поддержки Sezim.abu - React приложение",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.76.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.1",
-    "react-scripts": "5.0.1"
-  },
+  "description": "Центр психологической поддержки Sezim.abu - Монорепозиторий",
+  "workspaces": [],
   "scripts": {
-    "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "dev": "react-scripts start",
-    "dev:frontend": "react-scripts start",
-    "dev:backend": "cd backend && npm run dev",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
     "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "build:backend": "cd backend && npm install",
-    "build:all": "npm run build:backend && npm run build",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
-    "vercel-build": "CI=false react-scripts build",
-    "install:all": "npm install && cd backend && npm install"
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:all": "npm run build:frontend && npm run build:backend",
+    "start:frontend": "npm start --prefix frontend",
+    "start:backend": "npm start --prefix backend"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "homepage": "/",
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "gh-pages": "^6.1.1"
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
+
