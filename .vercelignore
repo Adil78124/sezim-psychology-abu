@@ -1,9 +1,0 @@
-# Ignore backend files for frontend deployment
-backend/
-*.md
-.git/
-node_modules/
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
