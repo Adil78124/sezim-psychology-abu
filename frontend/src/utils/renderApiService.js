@@ -22,26 +22,44 @@ export const sendContactMessage = async (formData) => {
       }),
     });
 
+    // Проверяем, если ответ пустой или не JSON
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`Server error: ${response.status} ${errorText}`);
+    }
+
+    // Проверяем, есть ли контент для парсинга
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`Expected JSON but got: ${contentType}. Response: ${text.substring(0, 100)}`);
+    }
+
     const result = await response.json();
 
-    if (response.ok) {
-      return {
-        ok: true,
-        message: 'Сообщение успешно отправлено!',
-        response: result
-      };
-    } else {
-      throw new Error(result.error || 'Ошибка сервера');
-    }
+    return {
+      ok: true,
+      message: 'Сообщение успешно отправлено!',
+      response: result
+    };
 
   } catch (error) {
     console.error('Ошибка при отправке через Render API:', error);
     
     // Проверяем, если это ошибка сети (сервер не запущен)
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+    if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
       return {
         ok: false,
-        message: 'Backend сервер не запущен. Запустите: cd backend && npm start',
+        message: `Не удалось подключиться к серверу. Проверьте REACT_APP_API_URL (текущий: ${API_URL})`,
+        error: error
+      };
+    }
+    
+    // Если ошибка парсинга JSON
+    if (error.message.includes('JSON') || error.message.includes('Unexpected end')) {
+      return {
+        ok: false,
+        message: `Сервер вернул неверный ответ. Проверьте, что backend запущен и доступен по адресу: ${API_URL}`,
         error: error
       };
     }
