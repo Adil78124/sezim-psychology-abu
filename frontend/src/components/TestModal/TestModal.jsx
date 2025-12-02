@@ -73,7 +73,7 @@ const TestModal = ({ testId, onClose }) => {
     <div className="test-modal active" onClick={handleOverlayClick}>
       <div className="modal-overlay"></div>
       <div className="modal-content">
-        <button className="modal-close" onClick={onClose} aria-label="Закрыть">
+        <button className="modal-close" onClick={onClose} aria-label={t({ ru: 'Закрыть', kz: 'Жабу' })}>
           &times;
         </button>
 

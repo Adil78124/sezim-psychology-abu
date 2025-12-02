@@ -6,15 +6,26 @@
 }
 
 .test-card {
-  background-color: var(--white);
-  padding: var(--spacing-xl);
-  border-radius: var(--radius-lg);
+  background-color: var(--white, #ffffff);
+  padding: var(--spacing-xl, 2rem);
+  border-radius: var(--radius-lg, 12px);
   text-align: center;
-  box-shadow: 0 5px 20px var(--shadow);
+  box-shadow: 0 5px 20px var(--shadow, rgba(0, 0, 0, 0.1));
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  min-height: 200px;
+}
+
+/* Переопределяем анимацию для test-card, чтобы элементы были видны сразу */
+.test-card.animate-on-scroll {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
 }
 
 .test-card::before {
@@ -54,19 +65,23 @@
 
 .test-card h3 {
   font-size: 1.25rem;
-  color: var(--text-dark);
-  margin-bottom: var(--spacing-sm);
-  font-weight: var(--font-weight-semibold);
+  color: var(--text-dark, #333333);
+  margin-bottom: var(--spacing-sm, 0.5rem);
+  font-weight: var(--font-weight-semibold, 600);
   position: relative;
   z-index: 2;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .test-card p {
-  color: var(--text-light);
+  color: var(--text-light, #666666);
   line-height: 1.6;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md, 1rem);
   position: relative;
   z-index: 2;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .test-meta {

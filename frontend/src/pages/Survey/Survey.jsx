@@ -4,19 +4,16 @@ import { useLanguage } from '../../context/LanguageContext';
 // import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp'; // Removed unused import
 import { initScrollAnimations } from '../../utils/animations';
 import TestModal from '../../components/TestModal/TestModal';
+import { supabase } from '../../supabaseClient';
 // import { testsData } from '../../data/testsData'; // Removed unused import
 import './Survey.css';
 
 const Survey = () => {
   const { t } = useLanguage(); // Removed unused language variable
   const [activeTest, setActiveTest] = useState(null);
-
-  useEffect(() => {
-    const observer = initScrollAnimations();
-    return () => observer.disconnect();
-  }, []);
-
-  const tests = [
+  
+  // Fallback данные, если таблица пуста или недоступна
+  const defaultTests = [
     {
       id: 'adaptation',
       icon: '🎓',
@@ -103,6 +100,70 @@ const Survey = () => {
     },
   ];
 
+  const [tests, setTests] = useState(defaultTests); // Инициализируем с fallback данными
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const observer = initScrollAnimations();
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const loadTests = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('surveys')
+          .select('*')
+          .order('order_index', { ascending: true });
+
+        if (error) {
+          console.error('Ошибка Supabase:', error);
+          // Если таблица не существует или другая ошибка - используем fallback
+          setTests(defaultTests);
+          setLoading(false);
+          return;
+        }
+
+        // Преобразуем данные из Supabase в формат компонента
+        const formattedTests = (data || []).map(survey => {
+          // Проверяем, что обязательные поля есть
+          if (!survey.title_ru || !survey.title_kz) {
+            console.warn('Пропущен тест с неполными данными:', survey);
+            return null;
+          }
+          return {
+            id: survey.id || `test-${Math.random()}`,
+            icon: survey.icon || '📝',
+            title: { ru: survey.title_ru, kz: survey.title_kz },
+            description: { ru: survey.description_ru || '', kz: survey.description_kz || '' },
+            duration: survey.duration?.toString() || '10',
+            questions: survey.questions?.toString() || '10',
+            externalLink: survey.external_link || null,
+          };
+        }).filter(Boolean); // Удаляем null значения
+
+        // Если данных нет, используем fallback
+        if (formattedTests.length === 0) {
+          console.warn('Таблица surveys пуста, используем fallback данные');
+          setTests(defaultTests);
+        } else {
+          setTests(formattedTests);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки тестов:', error);
+        // Fallback на статические данные при ошибке
+        console.warn('Используем fallback данные из-за ошибки загрузки');
+        setTests(defaultTests);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const startTest = (testId) => {
     setActiveTest(testId);
   };
@@ -135,11 +196,23 @@ const Survey = () => {
       {/* Tests List */}
       <section className="tests">
         <div className="container">
-          <div className="tests-grid">
-            {tests.map((test, index) => (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>{t({ ru: 'Загрузка...', kz: 'Жүктелуде...' })}</p>
+            </div>
+          ) : tests.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>{t({ ru: 'Пока нет доступных тестов', kz: 'Қолжетімді тесттер жоқ' })}</p>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                Debug: tests.length = {tests.length}
+              </p>
+            </div>
+          ) : (
+            <div className="tests-grid">
+              {tests.map((test, index) => (
               <div 
                 key={test.id} 
-                className="test-card animate-on-scroll"
+                className="test-card animate-on-scroll animated"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="test-icon">{test.icon}</div>
@@ -166,8 +239,9 @@ const Survey = () => {
                   </button>
                 )}
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

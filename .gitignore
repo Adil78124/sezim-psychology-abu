@@ -1,17 +1,48 @@
-/backend/node_modules
-/backend/dist
-/backend/build
-/backend/logs
-/backend/temp
-/backend/uploads
-/backend/public
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
 
-/frontend/.env
-/frontend/package-lock.json
-/frontend/.env.local
+# Testing
+/coverage
 
-/frontend/node_modules
-/frontend/dist
-/frontend/build
+# Production
+/build
+/dist
 
-/frontend/.env
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.dockerignore
+
+# Misc
+*.pem
+.cache/

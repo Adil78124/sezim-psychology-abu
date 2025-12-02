@@ -1,93 +1,107 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { openWhatsAppForPsychologist } from '../../utils/whatsapp';
+import { supabase } from '../../supabaseClient';
 import './Psychologists.css';
 
 const Psychologists = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [psychologists, setPsychologists] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Загружаем психологов из Supabase
+  useEffect(() => {
+    const loadPsychologists = async () => {
+      try {
+        setLoading(true);
+        
+        // Проверяем и очищаем истёкшую сессию, если есть
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { error: userError } = await supabase.auth.getUser();
+          if (userError && userError.message?.includes('JWT')) {
+            // Токен истёк, очищаем сессию
+            await supabase.auth.signOut();
+          }
+        }
 
-  const psychologists = [
-    {
-      id: 1,
-      category: 'consultant',
-      name: { ru: 'Секрекова Жадра Сарсенбековна', kz: 'Секрекова Жадра Сарсенбековна' },
-      position: { ru: 'Практикующий психолог', kz: 'Тәжірибелі психолог' },
-      phone: '+77076750099',
-      email: '',
-      therapy: { ru: 'Терапия принятия и ответственности (ACT)', kz: 'Қабылдау және жауапкершілік терапиясы (ACT)' },
-      education: {
-        ru: 'Бакалавриат: Казахский национальный университет им. аль-Фараби, г. Алматы\nМагистратура: Университет "Туран", г. Алматы',
-        kz: 'Бакалавриат: Әл-Фараби атындағы Қазақ ұлттық университеті, Алматы қ.\nМагистратура: "Тұран" университеті, Алматы қ.',
-      },
-      about: {
-        ru: 'Я - Жадра, практикующий психолог. Работаю в подходе терапии принятия и ответственности (АСТ), помогаю людям справляться с тревогой, стрессом, выгоранием, находить баланс между работой, отношениями и личными ценностями. Для меня важно создавать безопасное пространство, где можно говорить о сложном, находить опору и шаг за шагом строить жизнь, которая имеет смысл именно для вас.',
-        kz: 'Мен - Жадра, тәжірибелі психолог. Қабылдау және жауапкершілік терапиясы (ACT) тәсілімен жұмыс істеймін, адамдарға мазасыздықпен, стресспен, өртенумен күресуге, жұмыс, қатынас және жеке құндылықтар арасындағы тепе-теңдікті табуға көмектесемін. Мен үшін күрделі нәрселер туралы сөйлесуге, тірек табуға және қадамдап өзіңіз үшін мағынасы бар өмір құруға болатын қауіпсіз кеңістік жасау маңызды.',
-      },
-      specialization: {
-        ru: 'тревожность, панические атаки, фобии, стресс, эмоциональное выгорание, чувство вины, стыда, заниженная самооценка, прокрастинация, трудности с мотивацией, поиск смысла и ценностей, внутренние кризисы, выгорание, страх ошибок, развитие лидерских и коммуникативных навыков',
-        kz: 'мазасыздық, паникалық шабуылдар, фобиялар, стресс, эмоционалды өртену, кінә сезімі, ұят, төмен өзін-өзі бағалау, кешіктіру, мотивация қиындықтары, мағына мен құндылықтарды іздеу, ішкі дағдарыстар, өртену, қателер қорқынышы, көшбасшылық және коммуникативтік дағдыларды дамыту',
-      },
-      description: {
-        ru: 'Работаю в подходе терапии принятия и ответственности (АСТ), помогаю людям справляться с тревогой, стрессом, выгоранием.',
-        kz: 'Қабылдау және жауапкершілік терапиясы (ACT) тәсілімен жұмыс істеймін, адамдарға мазасыздықпен, стресспен, өртенумен күресуге көмектесемін.',
-      },
-      image: '/images/Sekrekova_Zhadra_Sarsenbekovna.jpg',
-    },
-    {
-      id: 2,
-      category: 'consultant',
-      name: { ru: 'Нүркенов Ерсін Рысқалиұлы', kz: 'Нүркенов Ерсін Рысқалиұлы' },
-      position: { ru: 'Психолог', kz: 'Психолог' },
-      phone: '+77772852133',
-      email: '',
-      therapy: { ru: 'Гуманистический подход', kz: 'Гуманистік тәсіл' },
-      education: {
-        ru: '2014-2018 гг. Бакалавриат: Университет "Туран", г. Алматы. Психология\n2018-2021 гг. Магистратура: Казахский гуманитарно-юридический инновационный университет, г. Семей. Педагогика и психология',
-        kz: '2014-2018 жж. Бакалавриат: "Тұран" университеті, Алматы қ. Психология\n2018-2021 жж. Магистратура: Қазақ гуманитарлық-заң инновациялық университеті, Семей қ. Педагогика және психология',
-      },
-      about: {
-        ru: 'Я - психолог, который помогает людям лучше понимать себя и свои внутренние процессы. Моя цель - не перегружать сухой теорией, а говорить о сложных вещах простым и понятным языком.',
-        kz: 'Мен адамдарға өздерін және ішкі процестерін жақсырақ түсінуге көмектесетін психологпын. Менің мақсатым - құрғақ теориямен шамадан тыс жүктемеу, күрделі нәрселер туралы қарапайым және түсінікті тілде сөйлесу.',
-      },
-      specialization: {
-        ru: 'тревога, стресс, эмоциональное выгорание, неуверенность в себе, заниженная самооценка, трудности в отношениях, прокрастинация, отсутствие мотивации, адаптация к новым условиям, поиск себя, личностный рост, поддержка студентов и молодых специалистов, переживание кризисов и сложных жизненных ситуаций',
-        kz: 'мазасыздық, стресс, эмоционалды өртену, өзіне сенімсіздік, төмен өзін-өзі бағалау, қатынастағы қиындықтар, кешіктіру, мотивацияның жоқтығы, жаңа жағдайларға бейімделу, өзін іздеу, жеке өсу, студенттер мен жас мамандарды қолдау, дағдарыстар мен күрделі өмірлік жағдайларды бастан кешіру',
-      },
-      description: {
-        ru: 'Помогаю людям лучше понимать себя и свои внутренние процессы. Говорю о сложных вещах простым и понятным языком.',
-        kz: 'Адамдарға өздерін және ішкі процестерін жақсырақ түсінуге көмектесемін. Күрделі нәрселер туралы қарапайым және түсінікті тілде сөйлесемін.',
-      },
-      image: '/images/Nürkenov_Ersin_Rysqaliuly.jpg',
-    },
-    {
-      id: 3,
-      category: 'consultant',
-      name: { ru: 'Рахматоллаева Амина Руслановна', kz: 'Рахматоллаева Амина Руслановна' },
-      position: { ru: 'Психолог, Магистр педагогических наук', kz: 'Психолог, Педагогика ғылымдарының магистрі' },
-      phone: '+77779920696',
-      email: '',
-      therapy: { ru: 'Классические методы консультирования', kz: 'Кеңес берудің классикалық әдістері' },
-      education: {
-        ru: '2019-2023 гг. Бакалавриат: НАО "Университет имени Шакарима", г. Семей. Психология\n2023-2025 гг. Магистратура: НАО "Университет имени Шакарима", г. Семей. Педагогика и психология',
-        kz: '2019-2023 жж. Бакалавриат: "Шәкәрім атындағы университеті" ҰАҚ, Семей қ. Психология\n2023-2025 жж. Магистратура: "Шәкәрім атындағы университеті" ҰАҚ, Семей қ. Педагогика және психология',
-      },
-      about: {
-        ru: 'Психолог «Службы психологической поддержки» ABU, Магистр педагогических наук. В своей работе опираюсь на профессиональные методы, но при этом создаю тёплую и доверительную атмосферу, в которой каждый может открыто говорить о своих переживаниях.',
-        kz: 'ABU «Психологиялық қолдау қызметінің» психологы, Педагогика ғылымдарының магистрі. Жұмысымда кәсіби әдістерге сүйенемін, бірақ әрқайсысы өз өткелдері туралы ашық сөйлесе алатын жылы және сенімді атмосфера жасаймын.',
-      },
-      specialization: {
-        ru: 'неуверенность в себе, улучшение отношений с собой и окружающими, поиск смысла и жизненных целей, страх, чувство тревоги, личностное развитие',
-        kz: 'өзіне сенімсіздік, өзімен және айналадағылармен қарым-қатынасты жақсарту, мағына мен өмірлік мақсаттарды іздеу, қорқыныш, мазасыздық сезімі, жеке дамыту',
-      },
-      description: {
-        ru: 'Создаю тёплую и доверительную атмосферу, в которой каждый может открыто говорить о своих переживаниях.',
-        kz: 'Әрқайсысы өз өткелдері туралы ашық сөйлесе алатын жылы және сенімді атмосфера жасаймын.',
-      },
-      image: '/images/Rakhmatollaeva_Amina_Ruslanovna.jpg',
-    },
-  ];
+        const { data, error: fetchError } = await supabase
+          .from('psychologists')
+          .select('*')
+          .eq('is_active', true)
+          .order('name_ru');
+
+        if (fetchError) {
+          // Если ошибка связана с JWT, пытаемся очистить сессию и повторить запрос
+          if (fetchError.message?.includes('JWT') || fetchError.message?.includes('expired') || fetchError.code === 'PGRST301') {
+            console.warn('Обнаружена ошибка JWT, очищаем сессию и повторяем запрос...');
+            await supabase.auth.signOut();
+            
+            // Повторяем запрос после очистки сессии
+            const { data: retryData, error: retryError } = await supabase
+              .from('psychologists')
+              .select('*')
+              .eq('is_active', true)
+              .order('name_ru');
+            
+            if (retryError) {
+              throw retryError;
+            }
+            
+            const formattedData = (retryData || []).map(psychologist => ({
+              id: psychologist.id,
+              category: 'consultant',
+              name: { ru: psychologist.name_ru, kz: psychologist.name_kz },
+              position: { ru: psychologist.position_ru, kz: psychologist.position_kz },
+              phone: psychologist.phone,
+              email: psychologist.email,
+              therapy: { ru: psychologist.therapy_ru, kz: psychologist.therapy_kz },
+              education: { ru: psychologist.education_ru, kz: psychologist.education_kz },
+              about: { ru: psychologist.about_ru, kz: psychologist.about_kz },
+              specialization: { ru: psychologist.specialization_ru, kz: psychologist.specialization_kz },
+              description: { ru: psychologist.description_ru || psychologist.about_ru, kz: psychologist.description_kz || psychologist.about_kz },
+              image: psychologist.image_url || '/images/default-psychologist.jpg',
+            }));
+            
+            setPsychologists(formattedData);
+            setError(null);
+            return;
+          }
+          throw fetchError;
+        }
+
+        // Преобразуем данные из Supabase в формат компонента
+        const formattedData = (data || []).map(psychologist => ({
+          id: psychologist.id,
+          category: 'consultant',
+          name: { ru: psychologist.name_ru, kz: psychologist.name_kz },
+          position: { ru: psychologist.position_ru, kz: psychologist.position_kz },
+          phone: psychologist.phone,
+          email: psychologist.email,
+          therapy: { ru: psychologist.therapy_ru, kz: psychologist.therapy_kz },
+          education: { ru: psychologist.education_ru, kz: psychologist.education_kz },
+          about: { ru: psychologist.about_ru, kz: psychologist.about_kz },
+          specialization: { ru: psychologist.specialization_ru, kz: psychologist.specialization_kz },
+          description: { ru: psychologist.description_ru || psychologist.about_ru, kz: psychologist.description_kz || psychologist.about_kz },
+          image: psychologist.image_url || '/images/default-psychologist.jpg',
+        }));
+
+        setPsychologists(formattedData);
+        setError(null);
+      } catch (err) {
+        console.error('Ошибка загрузки психологов:', err);
+        // Показываем более понятное сообщение об ошибке
+        const errorMessage = err.message || 'Не удалось загрузить данные. Попробуйте обновить страницу.';
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPsychologists();
+  }, []);
 
   const filteredPsychologists = psychologists.filter((psychologist) => {
     const matchesSearch =
@@ -97,17 +111,6 @@ const Psychologists = () => {
     return matchesSearch;
   });
 
-  const handleAppointment = (psychologistName) => {
-    console.log('Кнопка нажата, психолог:', psychologistName);
-    try {
-      const currentLanguage = language || 'ru';
-      console.log('Текущий язык:', currentLanguage);
-      openWhatsAppForPsychologist(psychologistName, currentLanguage);
-    } catch (error) {
-      console.error('Ошибка при открытии WhatsApp:', error);
-      alert('Ошибка при открытии WhatsApp. Попробуйте еще раз.');
-    }
-  };
 
   return (
     <div className="psychologists-page">
@@ -158,8 +161,19 @@ const Psychologists = () => {
       {/* Psychologists Grid */}
       <section className="psychologists">
         <div className="container">
-          <div className="psychologists-grid">
-            {filteredPsychologists.map((psychologist) => (
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>{t({ ru: 'Загрузка...', kz: 'Жүктелуде...' })}</p>
+            </div>
+          )}
+          {error && (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>
+              <p>{t({ ru: 'Ошибка загрузки данных', kz: 'Деректерді жүктеу қатесі' })}: {error}</p>
+            </div>
+          )}
+          {!loading && !error && (
+            <div className="psychologists-grid">
+              {filteredPsychologists.map((psychologist) => (
               <div key={psychologist.id} className="psychologist-card">
                 <div className="psychologist-image">
                   <img src={psychologist.image} alt={t(psychologist.name)} />
@@ -193,16 +207,19 @@ const Psychologists = () => {
                     </details>
                   )}
                   
-                  <button
-                    className="btn btn-primary btn-small"
-                    onClick={() => handleAppointment(t(psychologist.name))}
-                  >
-                    {t({ ru: 'Записаться', kz: 'Жазылу' })}
-                  </button>
+                  <div className="action-buttons">
+                    <Link
+                      to={`/appointment?psychologist=${psychologist.id}`}
+                      className="btn btn-primary btn-small"
+                    >
+                      {t({ ru: 'Записаться онлайн', kz: 'Онлайн жазылу' })}
+                    </Link>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -236,18 +236,21 @@
 
 .exercises-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-xl);
   margin-bottom: var(--spacing-xl);
 }
 
 .exercise-card {
   background-color: var(--white);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  padding-left: var(--spacing-xl);
   border-radius: var(--radius-lg);
-  box-shadow: 0 3px 15px var(--shadow);
-  transition: all 0.3s ease;
-  border-left: 4px solid var(--primary-blue);
+  box-shadow: 0 2px 15px var(--shadow);
+  transition: var(--transition);
+  position: relative;
+  border-left: 5px solid var(--primary-blue);
+  min-height: 280px;
 }
 
 .exercise-card:hover {

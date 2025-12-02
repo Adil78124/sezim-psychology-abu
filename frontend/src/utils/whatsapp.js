@@ -1,4 +1,6 @@
 // Утилита для работы с WhatsApp
+// Примечание: alert здесь не переведен, так как это утилита без доступа к контексту языка
+// В компонентах, использующих эту функцию, ошибки обрабатываются с переводами
 export const openWhatsApp = (message = '') => {
   const defaultMessage = 'Здравствуйте! Хочу записаться на консультацию в центр Sezim.abu.';
   const finalMessage = message || defaultMessage;
@@ -11,7 +13,8 @@ export const openWhatsApp = (message = '') => {
     window.open(whatsappUrl, '_blank');
   } catch (error) {
     console.error('Ошибка при открытии WhatsApp:', error);
-    alert('Не удалось открыть WhatsApp. Попробуйте еще раз.');
+    // Ошибка обрабатывается в компонентах с переводами
+    throw error;
   }
 };
 

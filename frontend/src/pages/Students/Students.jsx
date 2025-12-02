@@ -1,22 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 // import { Link } from 'react-router-dom'; // Removed unused import
 import { useLanguage } from '../../context/LanguageContext';
 // import { openWhatsAppForGeneralAppointment } from '../../utils/whatsapp'; // Removed unused import
 import { initScrollAnimations } from '../../utils/animations';
+import { supabase } from '../../supabaseClient';
 import './Students.css';
 
 const Students = () => {
   const { t } = useLanguage();
-
-  useEffect(() => {
-    const observer = initScrollAnimations();
-    return () => observer.disconnect();
-  }, []);
-
-
-
-
-  const exercises = [
+  
+  // Fallback данные, если таблицы пусты или недоступны
+  const defaultExercises = [
      {
        title: { ru: 'Метод Pomodoro (Помодоро)', kz: 'Pomodoro әдісі (Помодоро)' },
       goal: { 
@@ -190,7 +184,7 @@ const Students = () => {
     }
   ];
 
-  const videos = [
+  const defaultVideos = [
     {
       title: { 
         ru: 'Душа и выбор в технологичном мире', 
@@ -241,6 +235,82 @@ const Students = () => {
     }
   ];
 
+  const [exercises, setExercises] = useState(defaultExercises); // Инициализируем с fallback данными
+  const [videos, setVideos] = useState(defaultVideos); // Инициализируем с fallback данными
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const observer = initScrollAnimations();
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Загружаем упражнения
+        const { data: exercisesData, error: exercisesError } = await supabase
+          .from('exercises')
+          .select('*')
+          .order('order_index', { ascending: true });
+
+        if (exercisesError) throw exercisesError;
+
+        // Загружаем видеоролики
+        const { data: videosData, error: videosError } = await supabase
+          .from('videos')
+          .select('*')
+          .order('order_index', { ascending: true });
+
+        if (videosError) throw videosError;
+
+        // Преобразуем упражнения
+        const formattedExercises = (exercisesData || []).map(ex => ({
+          title: { ru: ex.title_ru, kz: ex.title_kz },
+          goal: { ru: ex.goal_ru || '', kz: ex.goal_kz || '' },
+          steps: {
+            ru: Array.isArray(ex.steps_ru) ? ex.steps_ru : [],
+            kz: Array.isArray(ex.steps_kz) ? ex.steps_kz : []
+          },
+          effect: { ru: ex.effect_ru || '', kz: ex.effect_kz || '' }
+        }));
+
+        // Преобразуем видеоролики
+        const formattedVideos = (videosData || []).map(vid => ({
+          title: { ru: vid.title_ru, kz: vid.title_kz },
+          description: { ru: vid.description_ru || '', kz: vid.description_kz || '' },
+          url: vid.url,
+          platform: vid.platform || 'YouTube'
+        }));
+
+        // Если данных нет, используем fallback
+        if (formattedExercises.length === 0) {
+          console.warn('Таблица exercises пуста, используем fallback данные');
+          setExercises(defaultExercises);
+        } else {
+          setExercises(formattedExercises);
+        }
+
+        if (formattedVideos.length === 0) {
+          console.warn('Таблица videos пуста, используем fallback данные');
+          setVideos(defaultVideos);
+        } else {
+          setVideos(formattedVideos);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        // Fallback на статические данные при ошибке
+        console.warn('Используем fallback данные из-за ошибки загрузки');
+        setExercises(defaultExercises);
+        setVideos(defaultVideos);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <div className="students-page">
@@ -264,8 +334,17 @@ const Students = () => {
               kz: 'Өнімділікті арттыру, өзін-өзі тану және мақсаттарға жету үшін практикалық техникалар'
             })}
           </p>
-          <div className="exercises-grid">
-            {exercises.map((exercise, index) => (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>{t({ ru: 'Загрузка...', kz: 'Жүктелуде...' })}</p>
+            </div>
+          ) : exercises.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>{t({ ru: 'Пока нет доступных упражнений', kz: 'Қолжетімді жаттығулар жоқ' })}</p>
+            </div>
+          ) : (
+            <div className="exercises-grid">
+              {exercises.map((exercise, index) => (
               <div key={index} className="exercise-card">
                  <div className="exercise-header">
                    <h3>{t(exercise.title)}</h3>
@@ -287,14 +366,24 @@ const Students = () => {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Videos Subsection */}
           <div className="videos-section">
             <h3 className="subsection-title">{t({ ru: 'Полезные видеоролики', kz: 'Пайдалы бейнелер' })}</h3>
-            <div className="videos-grid">
-              {videos.map((video, index) => (
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <p>{t({ ru: 'Загрузка...', kz: 'Жүктелуде...' })}</p>
+              </div>
+            ) : videos.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <p>{t({ ru: 'Пока нет доступных видеороликов', kz: 'Қолжетімді бейнелер жоқ' })}</p>
+              </div>
+            ) : (
+              <div className="videos-grid">
+                {videos.map((video, index) => (
                 <div key={index} className="video-card">
                   <div className={`video-platform ${video.platform.toLowerCase()}`}>{video.platform}</div>
                   <h4>{t(video.title)}</h4>
@@ -303,8 +392,9 @@ const Students = () => {
                     {t({ ru: 'Смотреть видео', kz: 'Бейнені көру' })} →
                   </a>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

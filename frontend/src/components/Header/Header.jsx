@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import Search from '../Search/Search';
 import './Header.css';
 
 const Header = () => {
@@ -31,7 +32,7 @@ const Header = () => {
   };
 
   return (
-    <header className="header">
+    <header className={`header ${language === 'kz' ? 'lang-kz' : ''}`}>
       <div className="container">
         <div className="header-content">
           <div className="logo">
@@ -53,24 +54,27 @@ const Header = () => {
                 </li>
               ))}
             </ul>
-            <div className="language-switcher">
-              <button
-                className={`lang-btn ${language === 'ru' ? 'active' : ''}`}
-                onClick={() => toggleLanguage('ru')}
-              >
-                RU
-              </button>
-              <button
-                className={`lang-btn ${language === 'kz' ? 'active' : ''}`}
-                onClick={() => toggleLanguage('kz')}
-              >
-                KZ
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Search />
+              <div className="language-switcher">
+                <button
+                  className={`lang-btn ${language === 'ru' ? 'active' : ''}`}
+                  onClick={() => toggleLanguage('ru')}
+                >
+                  RU
+                </button>
+                <button
+                  className={`lang-btn ${language === 'kz' ? 'active' : ''}`}
+                  onClick={() => toggleLanguage('kz')}
+                >
+                  KZ
+                </button>
+              </div>
             </div>
             <button
               className={`mobile-menu-toggle ${mobileMenuOpen ? 'active' : ''}`}
               onClick={handleMobileMenuToggle}
-              aria-label="Меню"
+              aria-label={t({ ru: 'Меню', kz: 'Мәзір' })}
             >
               <span></span>
               <span></span>

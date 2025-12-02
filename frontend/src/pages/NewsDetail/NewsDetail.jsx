@@ -45,7 +45,7 @@ const NewsDetail = () => {
             supabaseId: data.id,
             category: 'news',
             title: { ru: data.title, kz: data.title },
-            date: data.created_at ? new Date(data.created_at).toLocaleDateString('ru-RU') : 'Недавно',
+            date: data.created_at ? new Date(data.created_at).toLocaleDateString('ru-RU') : t({ ru: 'Недавно', kz: 'Жақында' }),
             description: { ru: shortText.substring(0, 200) || '', kz: shortText.substring(0, 200) || '' },
             fullContent: { ru: fullText, kz: fullText },
             image: data.image_url || '/images/news-1.jpg',

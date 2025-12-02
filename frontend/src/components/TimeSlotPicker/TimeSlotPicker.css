@@ -1,0 +1,119 @@
+.time-slot-picker {
+  /* Стили уже применены через appointment-card */
+}
+
+.time-slot-message {
+  text-align: center;
+  color: var(--text-light);
+  padding: var(--spacing-md);
+  font-style: italic;
+}
+
+.time-slot-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.time-slot-group:last-child {
+  margin-bottom: 0;
+}
+
+.time-slot-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--gray-medium);
+}
+
+.time-slot-group-icon {
+  font-size: 1.2rem;
+}
+
+.time-slot-group-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-dark);
+  font-size: 1.1rem;
+}
+
+.time-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.time-slot {
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--gray-medium);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-width: 80px;
+}
+
+.time-slot:hover:not(.booked):not(:disabled) {
+  border-color: var(--primary-blue);
+  background: var(--light-blue);
+  color: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(107, 163, 214, 0.2);
+}
+
+.time-slot.selected {
+  background: var(--primary-blue);
+  color: var(--white);
+  border-color: var(--primary-blue);
+  font-weight: var(--font-weight-bold);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(107, 163, 214, 0.4);
+}
+
+.time-slot.booked,
+.time-slot:disabled {
+  background: var(--gray-medium);
+  color: var(--text-light);
+  cursor: not-allowed;
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.time-slot.current-time {
+  border-color: #ff9800;
+  background: #fff3e0;
+  color: #e65100;
+  font-weight: var(--font-weight-bold);
+  position: relative;
+}
+
+.time-slot.current-time:hover:not(.booked):not(:disabled) {
+  border-color: #ff9800;
+  background: #ffe0b2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+}
+
+.current-time-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 8px;
+  color: #ff9800;
+}
+
+@media (max-width: 640px) {
+  .time-slot-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: var(--spacing-xs);
+  }
+
+  .time-slot {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+

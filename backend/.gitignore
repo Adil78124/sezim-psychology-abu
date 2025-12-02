@@ -24,3 +24,7 @@ Thumbs.db
 *.swo
 *~
 
+# Admin passwords (security)
+ADMIN_PASSWORDS.txt
+*PASSWORDS*.txt
+

@@ -200,10 +200,19 @@ details {
 }
 
 details summary {
+  list-style: none; /* убираем маркер */
   cursor: pointer;
   font-weight: 500;
   color: var(--primary-blue);
   transition: color 0.3s ease;
+}
+
+/* скрываем стандартный треугольник у summary во всех движках */
+details summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::marker {
+  content: "";
 }
 
 details summary:hover {
@@ -239,6 +248,29 @@ details p {
 
 .psychologist-info .btn:active {
   transform: translateY(0);
+}
+
+/* Единый блок действий в карточке: одинаковая ширина и высота кнопок */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.action-buttons .btn-small {
+  flex: 1 1 0;
+  /* фиксируем единую высоту, чтобы кнопки выглядели одинаково,
+     даже если текст в две строки */
+  height: 56px;
+  text-align: center;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  line-height: 1.1;
+  white-space: normal; /* разрешаем перенос строк для длинного текста */
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 18px rgba(107, 163, 214, 0.18);
 }
 
 @media (max-width: 768px) {

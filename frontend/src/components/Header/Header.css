@@ -62,6 +62,18 @@
   flex-wrap: nowrap;
 }
 
+.header.lang-kz .nav-list {
+  gap: 0.25rem;
+  column-gap: 0.25rem;
+}
+.header.lang-kz .nav-link {
+  font-size: 0.9rem;
+  padding: 0.35rem 0.6rem;
+}
+.header.lang-kz .logo h1 {
+  font-size: 1.9rem;
+}
+
 .nav-link {
   text-decoration: none;
   color: var(--text-dark);

@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import "./AdminPanel.css";
+import AppointmentsAdmin from "./AppointmentsAdmin";
+import PsychologistsAdmin from "./PsychologistsAdmin";
+import AlphabetAdmin from "./AlphabetAdmin";
+import ExercisesAdmin from "./ExercisesAdmin";
+import VideosAdmin from "./VideosAdmin";
+import SurveysAdmin from "./SurveysAdmin";
+import ContactsAdmin from "./ContactsAdmin";
 
-export default function AdminPanel() {
-  const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+export default function AdminPanel({ user: userProp }) {
+  const [user, setUser] = useState(userProp || null);
+  const [isAdmin, setIsAdmin] = useState(true); // Все залогиненные пользователи - админы
+  const [loading] = useState(false);
+  const [activeTab, setActiveTab] = useState('appointments');
 
   const [news, setNews] = useState([]);
   const [title, setTitle] = useState("");
@@ -24,45 +32,33 @@ export default function AdminPanel() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
 
   useEffect(() => {
-    // Получаем текущего пользователя
-    const getCurrentUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Ошибка получения пользователя:', error);
-        setUser(null);
-        setIsAdmin(false);
-        setLoading(false);
-        return;
+    // Устанавливаем пользователя из пропсов
+    if (userProp) {
+      setUser(userProp);
+      setIsAdmin(true); // Все пользователи из таблицы admins - админы
+    }
+
+    // Очищаем старые Supabase Auth сессии перед загрузкой данных
+    const clearSupabaseAuth = async () => {
+      try {
+        await supabase.auth.signOut();
+        // Очищаем все Supabase Auth токены из localStorage
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.includes('supabase') && key.includes('auth')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        // Игнорируем ошибки
       }
-      
-      setUser(user);
-      if (user) {
-        // Проверяем, является ли пользователь админом
-        // В Supabase это можно сделать через RLS или проверку email
-        const adminEmails = ['kairatovadil7@gmail.com', 'haval.semey@mail.ru'];
-        setIsAdmin(adminEmails.includes(user.email));
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
     };
-
-    getCurrentUser();
-
-    // Слушаем изменения аутентификации
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user);
-        const adminEmails = ['kairatovadil7@gmail.com', 'haval.semey@mail.ru'];
-        setIsAdmin(adminEmails.includes(session.user.email));
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAdmin(false);
-      }
-    });
 
     // Загружаем новости из Supabase
     const loadNews = async () => {
+      // Сначала очищаем старые сессии
+      await clearSupabaseAuth();
+      
       const { data, error } = await supabase
         .from('news')
         .select('*')
@@ -70,6 +66,18 @@ export default function AdminPanel() {
       
       if (error) {
         console.error('Ошибка загрузки новостей:', error);
+        // Если ошибка JWT, пробуем еще раз после очистки
+        if (error.code === 'PGRST303' || error.message?.includes('JWT')) {
+          await clearSupabaseAuth();
+          const { data: retryData, error: retryError } = await supabase
+            .from('news')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (!retryError && retryData) {
+            setNews(retryData);
+          }
+        }
       } else {
         setNews(data || []);
       }
@@ -89,10 +97,9 @@ export default function AdminPanel() {
       .subscribe();
 
     return () => {
-      subscription?.unsubscribe();
       newsSubscription.unsubscribe();
     };
-  }, []);
+  }, [userProp]);
 
   // Функция для создания безопасного имени файла (без кириллицы, пробелов и спецсимволов)
   const getSafeFileName = (originalName) => {
@@ -325,8 +332,12 @@ export default function AdminPanel() {
     }
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = () => {
+    // Очищаем токен и данные из localStorage
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminData');
+    // Перезагружаем страницу для возврата на страницу логина
+    window.location.reload();
     window.location.reload();
   };
 
@@ -365,7 +376,7 @@ export default function AdminPanel() {
           <div className="admin-header-content">
             <div>
               <h1>Панель управления</h1>
-              <p>Добро пожаловать, {user.email}</p>
+              <p>Добро пожаловать, {user.fullName || user.username}</p>
             </div>
             <button onClick={logout} className="btn btn-secondary">
               Выйти
@@ -376,7 +387,156 @@ export default function AdminPanel() {
 
       <div className="admin-content">
         <div className="container">
+          {/* Навигация по разделам */}
+          <div className="admin-tabs" style={{ 
+            display: 'flex', 
+            gap: '10px', 
+            marginBottom: '30px', 
+            borderBottom: '2px solid #e0e0e0',
+            flexWrap: 'wrap'
+          }}>
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={activeTab === 'appointments' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'appointments' ? '#667eea' : 'transparent',
+                color: activeTab === 'appointments' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'appointments' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'appointments' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              📅 Записи
+            </button>
+            <button
+              onClick={() => setActiveTab('psychologists')}
+              className={activeTab === 'psychologists' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'psychologists' ? '#667eea' : 'transparent',
+                color: activeTab === 'psychologists' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'psychologists' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'psychologists' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              👥 Психологи
+            </button>
+            <button
+              onClick={() => setActiveTab('news')}
+              className={activeTab === 'news' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'news' ? '#667eea' : 'transparent',
+                color: activeTab === 'news' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'news' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'news' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              📰 Новости
+            </button>
+            <button
+              onClick={() => setActiveTab('alphabet')}
+              className={activeTab === 'alphabet' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'alphabet' ? '#667eea' : 'transparent',
+                color: activeTab === 'alphabet' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'alphabet' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'alphabet' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              📚 Алфавит
+            </button>
+            <button
+              onClick={() => setActiveTab('exercises')}
+              className={activeTab === 'exercises' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'exercises' ? '#667eea' : 'transparent',
+                color: activeTab === 'exercises' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'exercises' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'exercises' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              💪 Упражнения
+            </button>
+            <button
+              onClick={() => setActiveTab('videos')}
+              className={activeTab === 'videos' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'videos' ? '#667eea' : 'transparent',
+                color: activeTab === 'videos' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'videos' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'videos' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              🎥 Видео
+            </button>
+            <button
+              onClick={() => setActiveTab('surveys')}
+              className={activeTab === 'surveys' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'surveys' ? '#667eea' : 'transparent',
+                color: activeTab === 'surveys' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'surveys' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'surveys' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              📝 Опросники
+            </button>
+            <button
+              onClick={() => setActiveTab('contacts')}
+              className={activeTab === 'contacts' ? 'active' : ''}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: activeTab === 'contacts' ? '#667eea' : 'transparent',
+                color: activeTab === 'contacts' ? 'white' : '#666',
+                cursor: 'pointer',
+                borderBottom: activeTab === 'contacts' ? '3px solid #667eea' : '3px solid transparent',
+                fontWeight: activeTab === 'contacts' ? 'bold' : 'normal',
+                transition: 'all 0.3s'
+              }}
+            >
+              📞 Контакты
+            </button>
+          </div>
+
+          {/* Контент вкладок */}
+          {activeTab === 'appointments' && <AppointmentsAdmin />}
+          {activeTab === 'psychologists' && <PsychologistsAdmin />}
+          {activeTab === 'alphabet' && <AlphabetAdmin />}
+          {activeTab === 'exercises' && <ExercisesAdmin />}
+          {activeTab === 'videos' && <VideosAdmin />}
+          {activeTab === 'surveys' && <SurveysAdmin />}
+          {activeTab === 'contacts' && <ContactsAdmin />}
+
           {/* Форма добавления/редактирования новости */}
+          {activeTab === 'news' && (
+            <>
           <section className="admin-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 className="section-title">
@@ -716,6 +876,8 @@ export default function AdminPanel() {
               </div>
             )}
           </section>
+            </>
+          )}
         </div>
       </div>
     </div>

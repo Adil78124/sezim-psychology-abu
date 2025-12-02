@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { useContacts } from '../../context/ContactsContext';
 import './Footer.css';
 
 const Footer = () => {
   const { t } = useLanguage();
+  const { contactInfo } = useContacts();
 
   return (
     <footer className="footer">
@@ -31,13 +33,13 @@ const Footer = () => {
           <div className="footer-section">
             <h4>{t({ ru: 'Контакты', kz: 'Байланыс' })}</h4>
             <p>
-              <a href="tel:+77056250389" style={{ color: 'inherit', textDecoration: 'none' }}>
-                📞 +7 (705) 625-03-89
+              <a href={`tel:${contactInfo.phoneMain.replace(/\s/g, '').replace(/[()-]/g, '')}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                📞 {contactInfo.phoneMain}
               </a>
             </p>
             <p>
               <a 
-                href="https://www.instagram.com/pp_gumfac_bokeikhan?igsh=ZmN1cnhqMnl5ZGoy" 
+                href={contactInfo.socialInstagramUrl}
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{ color: 'inherit', textDecoration: 'none' }}
@@ -47,9 +49,9 @@ const Footer = () => {
             </p>
             <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', lineHeight: '1.6' }}>
               {t({ ru: '🆘 Телефоны доверия:', kz: '🆘 Сенім телефондары:' })}<br/>
-              <a href="tel:1307" style={{ color: 'var(--primary-blue)', fontWeight: 'bold', textDecoration: 'none' }}>1307</a> - 
+              <a href={`tel:${contactInfo.phoneTrust1307}`} style={{ color: 'var(--primary-blue)', fontWeight: 'bold', textDecoration: 'none' }}>{contactInfo.phoneTrust1307}</a> - 
               {t({ ru: ' Анонимный телефон доверия регионального центра психологической поддержки', kz: ' Аймақтық психологиялық қолдау орталығының анонимді сенім телефоны' })}<br/>
-              <a href="tel:111" style={{ color: 'var(--primary-blue)', fontWeight: 'bold', textDecoration: 'none' }}>111</a> - 
+              <a href={`tel:${contactInfo.phoneTrust111}`} style={{ color: 'var(--primary-blue)', fontWeight: 'bold', textDecoration: 'none' }}>{contactInfo.phoneTrust111}</a> - 
               {t({ ru: ' Круглосуточный контакт-центр по защите прав детей, семьи и женщин', kz: ' Балалардың, отбасының және әйелдердің құқықтарын қорғау жөніндегі тәуліктік байланыс орталығы' })}
             </p>
           </div>
