@@ -16,6 +16,11 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+# Backend and frontend .env files
+backend/.env
+frontend/.env
+# Docker compose with secrets (if any)
+docker-compose.override.yml
 
 # Logs
 npm-debug.log*
