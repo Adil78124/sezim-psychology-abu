@@ -1,0 +1,414 @@
+import { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
+import { useContacts } from '../../context/ContactsContext';
+import { sendContactMessage } from '../../utils/renderApiService';
+import './Contacts.css';
+
+const Contacts = () => {
+  const { t, language } = useLanguage();
+  const { contactInfo } = useContacts();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+    privacy: false,
+  });
+
+  const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    });
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = t({ ru: 'Обязательное поле', kz: 'Міндетті өріс' });
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = t({ ru: 'Обязательное поле', kz: 'Міндетті өріс' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = t({ ru: 'Некорректный email', kz: 'Қате email' });
+    }
+
+    if (!formData.subject) {
+      newErrors.subject = t({ ru: 'Обязательное поле', kz: 'Міндетті өріс' });
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = t({ ru: 'Обязательное поле', kz: 'Міндетті өріс' });
+    }
+
+    if (!formData.privacy) {
+      newErrors.privacy = t({
+        ru: 'Необходимо согласие с политикой конфиденциальности',
+        kz: 'Құпиялылық саясатымен келісу қажет',
+      });
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus(t({ ru: 'Отправка...', kz: 'Жіберілуде...' }));
+
+    try {
+      // Используем новый сервис для отправки через Render API
+      const result = await sendContactMessage(formData);
+      
+      if (result.ok) {
+        setStatus(t({ ru: 'Сообщение успешно отправлено!', kz: 'Хабарлама сәтті жіберілді!' }));
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          privacy: false,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при отправке формы:', error);
+      console.error('Тип ошибки:', typeof error);
+      console.error('Стек ошибки:', error.stack);
+      
+      let errorMessage;
+      if (error.message.includes('Backend не запущен')) {
+        errorMessage = t({
+          ru: '⚠️ Сервер не запущен. Обратитесь к администратору.',
+          kz: '⚠️ Сервер іске қосылмаған. Әкімшіге хабарласыңыз.'
+        });
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = t({
+          ru: '⚠️ Ошибка соединения. Проверьте интернет.',
+          kz: '⚠️ Байланыс қатесі. Интернетті тексеріңіз.'
+        });
+      } else if (error.message.includes('Unexpected token')) {
+        errorMessage = t({
+          ru: '⚠️ Ошибка сервера. Попробуйте еще раз или обратитесь к администратору.',
+          kz: '⚠️ Сервер қатесі. Қайталап көріңіз немесе әкімшіге хабарласыңыз.'
+        });
+      } else if (error.message.includes('HTML страницу вместо JSON')) {
+        errorMessage = t({
+          ru: '⚠️ Backend сервер не запущен. Запустите: cd backend && npm start',
+          kz: '⚠️ Backend сервер іске қосылмаған. Іске қосыңыз: cd backend && npm start'
+        });
+      } else {
+        errorMessage = t({ 
+          ru: `❌ ${error.message}`, 
+          kz: `❌ ${error.message}` 
+        });
+      }
+      
+      setStatus(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="contacts-page">
+      {/* Page Header */}
+      <section className="page-header">
+        <div className="container">
+          <h1>{t({ ru: 'Свяжитесь с нами', kz: 'Бізбен байланысыңыз' })}</h1>
+          <p>
+            {t({
+              ru: 'Мы всегда рады помочь вам и ответить на ваши вопросы',
+              kz: 'Біз сізге көмектесіп, сұрақтарыңызға жауап беруге әрқашан қуаныштымыз',
+            })}
+          </p>
+        </div>
+      </section>
+
+      {/* Contact Info */}
+      <section className="contact-info">
+        <div className="container">
+          <div className="contact-cards">
+            <div className="contact-card">
+              <div className="contact-icon">📍</div>
+              <h3>{t({ ru: 'Адрес', kz: 'Мекенжай' })}</h3>
+              <p>{language === 'kz' ? contactInfo.addressKz : contactInfo.addressRu}</p>
+              <p>{language === 'kz' ? contactInfo.buildingKz : contactInfo.buildingRu}</p>
+            </div>
+
+            <div className="contact-card">
+              <div className="contact-icon">📞</div>
+              <h3>{t({ ru: 'Телефоны', kz: 'Телефондар' })}</h3>
+              <p>
+                <a href={`tel:${contactInfo.phoneMain.replace(/\s/g, '').replace(/[()-]/g, '')}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {contactInfo.phoneMain}
+                </a>
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '0.5rem' }}>
+                {t({ ru: 'Телефоны доверия:', kz: 'Сенім телефондары:' })}
+              </p>
+              <p style={{ fontSize: '0.9rem' }}>
+                <a href={`tel:${contactInfo.phoneTrust1307}`} style={{ color: 'var(--primary-blue)', textDecoration: 'none', fontWeight: 'bold' }}>
+                  {contactInfo.phoneTrust1307}
+                </a> | <a href={`tel:${contactInfo.phoneTrust111}`} style={{ color: 'var(--primary-blue)', textDecoration: 'none', fontWeight: 'bold' }}>
+                  {contactInfo.phoneTrust111}
+                </a>
+              </p>
+            </div>
+
+            <div className="contact-card">
+              <div className="contact-icon">📱</div>
+              <h3>{t({ ru: 'Социальные сети', kz: 'Әлеуметтік желілер' })}</h3>
+              <p>
+                <a 
+                  href={contactInfo.socialInstagramUrl}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--primary-blue)', textDecoration: 'none' }}
+                >
+                  📷 Instagram
+                </a>
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '0.5rem' }}>
+                {contactInfo.socialInstagramHandle}
+              </p>
+            </div>
+
+            <div className="contact-card">
+              <div className="contact-icon">⏰</div>
+              <h3>{t({ ru: 'Режим работы', kz: 'Жұмыс режимі' })}</h3>
+              <p>{language === 'kz' ? contactInfo.workingHoursKz : contactInfo.workingHoursRu}</p>
+              <p>{language === 'kz' ? contactInfo.workingDaysOffKz : contactInfo.workingDaysOffRu}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Form & Map */}
+      <section className="contact-section">
+        <div className="container">
+          <div className="contact-layout">
+            {/* Contact Form */}
+            <div className="contact-form-wrapper">
+              <h2>{t({ ru: 'Напишите нам', kz: 'Бізге жазыңыз' })}</h2>
+              <p>
+                {t({
+                  ru: 'Оставьте свое сообщение, и мы свяжемся с вами в ближайшее время',
+                  kz: 'Хабарламаңызды қалдырыңыз, біз жақын арада сізбен хабарласамыз',
+                })}
+              </p>
+
+              <form className="contact-form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label htmlFor="name">{t({ ru: 'Имя *', kz: 'Аты *' })}</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder={t({ ru: 'Введите ваше имя', kz: 'Атыңызды енгізіңіз' })}
+                    className={errors.name ? 'error' : ''}
+                  />
+                  {errors.name && <span className="error-message">{errors.name}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email">{t({ ru: 'Email *', kz: 'Email *' })}</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="example@email.com"
+                    className={errors.email ? 'error' : ''}
+                  />
+                  {errors.email && <span className="error-message">{errors.email}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="phone">{t({ ru: 'Телефон', kz: 'Телефон' })}</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+7 (___) ___-__-__"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="subject">{t({ ru: 'Тема обращения *', kz: 'Өтініш тақырыбы *' })}</label>
+                  <select
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    className={errors.subject ? 'error' : ''}
+                  >
+                    <option value="">{t({ ru: 'Выберите тему', kz: 'Тақырыпты таңдаңыз' })}</option>
+                    <option value="consultation">
+                      {t({ ru: 'Запись на консультацию', kz: 'Кеңеске жазылу' })}
+                    </option>
+                    <option value="question">{t({ ru: 'Общий вопрос', kz: 'Жалпы сұрақ' })}</option>
+                    <option value="feedback">{t({ ru: 'Отзыв', kz: 'Пікір' })}</option>
+                    <option value="other">{t({ ru: 'Другое', kz: 'Басқа' })}</option>
+                  </select>
+                  {errors.subject && <span className="error-message">{errors.subject}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="message">{t({ ru: 'Сообщение *', kz: 'Хабарлама *' })}</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows="5"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder={t({ ru: 'Введите ваше сообщение', kz: 'Хабарламаңызды енгізіңіз' })}
+                    className={errors.message ? 'error' : ''}
+                  />
+                  {errors.message && <span className="error-message">{errors.message}</span>}
+                </div>
+
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="privacy"
+                      name="privacy"
+                      checked={formData.privacy}
+                      onChange={handleChange}
+                    />
+                    <span>
+                      {t({
+                        ru: 'Я согласен с политикой конфиденциальности *',
+                        kz: 'Құпиялылық саясатымен келісемін *',
+                      })}
+                    </span>
+                  </label>
+                  {errors.privacy && <span className="error-message">{errors.privacy}</span>}
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="btn btn-primary btn-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting 
+                    ? t({ ru: 'Отправка...', kz: 'Жіберілуде...' })
+                    : t({ ru: 'Отправить сообщение', kz: 'Хабарлама жіберу' })
+                  }
+                </button>
+
+                {status && (
+                  <div className={`status-message ${status.includes('✅') ? 'success' : status.includes('❌') ? 'error' : 'info'}`}>
+                    {status}
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Map */}
+            <div className="map-wrapper">
+              <h2>{t({ ru: 'Как нас найти', kz: 'Бізді қалай табуға болады' })}</h2>
+              <div className="map-container">
+                <iframe
+                  src={contactInfo.googleMapsUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={t({ ru: 'Карта местоположения', kz: 'Орналасқан жердің картасы' })}
+                ></iframe>
+              </div>
+
+              <div className="map-info">
+                <h3>{t({ ru: 'Контактная информация', kz: 'Байланыс ақпараты' })}</h3>
+                <ul>
+                  <li>
+                    📍 {language === 'kz' ? contactInfo.buildingKz.split(',')[0] : contactInfo.buildingRu.split(',')[0]}
+                  </li>
+                  <li>
+                    🚪 {language === 'kz' ? contactInfo.buildingKz.split(',').slice(1).join(',').trim() : contactInfo.buildingRu.split(',').slice(1).join(',').trim()}
+                  </li>
+                  <li>
+                    📞 {t({ ru: 'Телефон:', kz: 'Телефон:' })} {contactInfo.phoneMain}
+                  </li>
+                  <li>
+                    🆘 {t({ ru: 'Телефоны доверия:', kz: 'Сенім телефондары:' })} {contactInfo.phoneTrust1307}, {contactInfo.phoneTrust111}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Media */}
+      <section className="social-media">
+        <div className="container">
+          <div className="social-media-header">
+            <h2>{t({ ru: 'Мы в социальных сетях', kz: 'Біз әлеуметтік желілерде' })}</h2>
+            <a 
+              href={contactInfo.socialInstagramUrl}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="social-link instagram-link" 
+              aria-label="Instagram"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              </svg>
+            </a>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 'var(--spacing-md)', color: 'var(--text-light)', fontSize: '0.9rem', lineHeight: '1.8' }}>
+            <p>
+              <strong style={{ color: 'var(--primary-blue)' }}>{contactInfo.phoneTrust1307}</strong> - 
+              {t({ 
+                ru: ' Анонимный телефон доверия регионального центра психологической поддержки', 
+                kz: ' Аймақтық психологиялық қолдау орталығының анонимді сенім телефоны' 
+              })}
+            </p>
+            <p style={{ marginTop: '0.5rem' }}>
+              <strong style={{ color: '#4CAF50' }}>{contactInfo.phoneTrust111}</strong> - 
+              {t({ 
+                ru: ' Круглосуточный контакт-центр по защите прав детей, семьи и женщин', 
+                kz: ' Балалардың, отбасының және әйелдердің құқықтарын қорғау жөніндегі тәуліктік байланыс орталығы' 
+              })}
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Contacts;
+

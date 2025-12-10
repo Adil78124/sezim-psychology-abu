@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="32" fill="#6BA3D6"/>
+  
+  <!-- Heart/Mind Symbol -->
+  <path d="M32 20C28 20 25 23 25 27C25 31 28 34 32 38C36 34 39 31 39 27C39 23 36 20 32 20Z" fill="#E8F4F8"/>
+  
+  <!-- Brain Waves -->
+  <path d="M18 28 Q20 26 22 28 T26 28" stroke="#A8D5E2" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M38 28 Q40 26 42 28 T46 28" stroke="#A8D5E2" stroke-width="2" stroke-linecap="round" fill="none"/>
+  
+  <!-- Text S -->
+  <text x="32" y="50" font-family="Inter, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">S</text>
+</svg>
+

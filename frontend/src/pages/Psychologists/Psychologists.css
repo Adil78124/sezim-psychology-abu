@@ -1,0 +1,321 @@
+.search-filter {
+  background-color: var(--gray-light);
+  padding: var(--spacing-lg) 0;
+}
+
+.search-box {
+  max-width: 600px;
+  margin: 0 auto var(--spacing-md);
+}
+
+.search-box input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--gray-medium);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--white);
+  position: relative;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(107, 163, 214, 0.1);
+  transform: translateY(-2px);
+  background-color: #fafbfc;
+}
+
+.search-box input::placeholder {
+  transition: opacity 0.3s ease;
+}
+
+.search-box input:focus::placeholder {
+  opacity: 0.5;
+}
+
+
+.psychologists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+  align-items: stretch; /* Равномерная высота карточек */
+}
+
+.psychologist-card {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 5px 20px var(--shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  flex-direction: column; /* Вертикальное расположение контента */
+  height: 100%; /* Полная высота в сетке */
+}
+
+.psychologist-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(107, 163, 214, 0.05) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+  pointer-events: none; /* Это позволяет кликать сквозь псевдоэлемент */
+}
+
+.psychologist-card:hover::before {
+  opacity: 1;
+}
+
+.psychologist-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(107, 163, 214, 0.25);
+}
+
+.psychologist-image {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+  background-color: var(--gray-light);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.psychologist-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Улучшенное качество изображения */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.psychologist-card:hover .psychologist-image img {
+  transform: scale(1.05);
+}
+
+/* Специальные стили для конкретных фотографий */
+.psychologist-image img[src*="Rakhmatollaeva_Amina_Ruslanovna"] {
+  object-position: center center;
+  object-fit: cover;
+}
+
+.psychologist-image img[src*="Sekrekova_Zhadra_Sarsenbekovna"] {
+  object-position: center top;
+  object-fit: cover;
+}
+
+.psychologist-image img[src*="Nürkenov_Ersin_Rysqaliuly"] {
+  object-position: center center;
+  object-fit: cover;
+}
+
+/* Placeholder для психологов без фото */
+.psychologist-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+}
+
+.placeholder-initials {
+  width: 150px;
+  height: 150px;
+  background-color: var(--white);
+  color: var(--primary-blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: var(--font-weight-bold);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: var(--transition);
+}
+
+.psychologist-card:hover .placeholder-initials {
+  transform: scale(1.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.placeholder-text {
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  opacity: 0.9;
+}
+
+.psychologist-info {
+  padding: var(--spacing-lg);
+  position: relative;
+  z-index: 2; /* Выше чем ::before элемент */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Занимает все доступное пространство */
+}
+
+.psychologist-info h3 {
+  font-size: 1.25rem;
+  color: var(--text-dark);
+  margin-bottom: var(--spacing-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.psychologist-position {
+  color: var(--primary-blue);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.95rem;
+}
+
+.psychologist-description {
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-md);
+  flex-grow: 1; /* Занимает доступное пространство */
+}
+
+/* Стили для details блока */
+details {
+  margin: var(--spacing-sm) 0;
+}
+
+details summary {
+  list-style: none; /* убираем маркер */
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--primary-blue);
+  transition: color 0.3s ease;
+}
+
+/* скрываем стандартный треугольник у summary во всех движках */
+details summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::marker {
+  content: "";
+}
+
+details summary:hover {
+  color: var(--primary-dark);
+}
+
+details p {
+  margin-top: var(--spacing-xs);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-light);
+  padding-left: var(--spacing-sm);
+}
+
+/* Кнопка записи */
+.psychologist-info .btn {
+  width: 100%;
+  margin-top: auto; /* Прижимает кнопку к низу карточки */
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-weight: var(--font-weight-semibold);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 10; /* Выше всех остальных элементов */
+  pointer-events: all; /* Убеждаемся что кнопка кликабельна */
+}
+
+.psychologist-info .btn:hover {
+  cursor: pointer;
+  transform: translateY(-2px);
+}
+
+.psychologist-info .btn:active {
+  transform: translateY(0);
+}
+
+/* Единый блок действий в карточке: одинаковая ширина и высота кнопок */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.action-buttons .btn-small {
+  flex: 1 1 0;
+  /* фиксируем единую высоту, чтобы кнопки выглядели одинаково,
+     даже если текст в две строки */
+  height: 56px;
+  text-align: center;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  line-height: 1.1;
+  white-space: normal; /* разрешаем перенос строк для длинного текста */
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 18px rgba(107, 163, 214, 0.18);
+}
+
+@media (max-width: 768px) {
+  .psychologists-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+  }
+
+  .filter-btn {
+    width: 100%;
+  }
+
+  .placeholder-initials {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+  }
+
+  .placeholder-text {
+    font-size: 0.9rem;
+  }
+
+  /* Улучшенное отображение фотографий на мобильных */
+  .psychologist-image {
+    height: 350px;
+  }
+
+  .psychologist-image img {
+    object-position: center center;
+  }
+}
+
+/* Дополнительные настройки для очень маленьких экранов */
+@media (max-width: 480px) {
+  .psychologist-image {
+    height: 300px;
+  }
+
+  .psychologist-image img {
+    object-position: center center;
+    /* Мягкое масштабирование для лучшего качества */
+    image-rendering: auto;
+  }
+}
+

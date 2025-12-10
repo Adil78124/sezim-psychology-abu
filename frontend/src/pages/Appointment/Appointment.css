@@ -1,0 +1,201 @@
+.appointment-page {
+  min-height: 100vh;
+  background: var(--gray-light);
+  /* отступы для корректной прокрутки с фиксированным хедером */
+  --header-height: 80px; /* скорректируй при необходимости под реальную высоту хедера */
+  --sticky-gap: 90px;    /* дополнительный зазор от хедера (увеличен) */
+}
+
+.appointment-content {
+  padding: var(--spacing-xl) 0;
+}
+
+.appointment-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--spacing-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.appointment-left-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.appointment-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.appointment-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s;
+}
+
+.appointment-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.psychologist-info-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  position: sticky;
+  /* поведение по умолчанию — у верхней границы контейнера */
+  top: calc(var(--header-height) + var(--sticky-gap));
+  transform: none;
+  transition: top 0.25s ease-out, transform 0.25s ease-out, box-shadow 0.25s ease-out;
+  will-change: transform;
+  z-index: 0; /* не перекрывает хедер */
+}
+
+.psychologist-info-card.is-centered {
+  /* режим «по центру экрана» при прокрутке календаря */
+  top: calc(50vh + var(--header-height) / 2 + var(--sticky-gap) / 2);
+  transform: translateY(calc(-50% - var(--header-height) / 2 - var(--sticky-gap) / 2));
+}
+
+.psychologist-info-card.at-bottom {
+  /* когда доходим до блока с кнопкой "Записаться" — отпускаем карточку */
+  position: static;
+  top: auto;
+  transform: none;
+}
+
+.psychologist-info-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.psychologist-photo {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto var(--spacing-md);
+  border: 4px solid var(--primary-blue);
+  box-shadow: 0 4px 12px rgba(107, 163, 214, 0.3);
+}
+
+.psychologist-info-card h3 {
+  color: var(--text-dark);
+  margin-bottom: var(--spacing-xs);
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.psychologist-position {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.psychologist-therapy {
+  color: var(--primary-blue);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--gray-medium);
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-dark);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--light-blue);
+}
+
+.form-title {
+  font-size: 1.3rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-dark);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--light-blue);
+}
+
+.appointment-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.form-group label {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-dark);
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 2px solid var(--gray-medium);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: var(--font-primary);
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+}
+
+.message {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.message.success {
+  background-color: var(--pastel-green);
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+@media (max-width: 968px) {
+  .appointment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-left-column {
+    order: 2;
+  }
+
+  .appointment-right-column {
+    order: 1;
+  }
+
+  .psychologist-info-card {
+    position: static;
+    transform: none;
+    top: auto;
+  }
+
+  .psychologist-photo {
+    width: 120px;
+    height: 120px;
+  }
+}
+

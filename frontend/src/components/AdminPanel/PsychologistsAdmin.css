@@ -1,0 +1,88 @@
+.psychologists-admin {
+  width: 100%;
+}
+
+.add-psychologist-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.psychologist-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.psychologists-list {
+  display: grid;
+  gap: 20px;
+}
+
+.psychologist-item {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.psychologist-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.psychologist-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.psychologist-item-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.psychologist-item-content {
+  margin-bottom: 15px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.psychologist-item-content p {
+  margin: 5px 0;
+}
+
+.psychologist-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .add-psychologist-card {
+    padding: 20px;
+  }
+
+  .psychologist-item-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .psychologist-actions {
+    flex-direction: column;
+  }
+
+  .psychologist-actions button {
+    width: 100%;
+  }
+}
+
+

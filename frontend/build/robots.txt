@@ -1,0 +1,13 @@
+# Sezim - Центр психологической поддержки
+# robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://sezim.kz/sitemap.xml
+
+# Disallow admin/test pages if any
+# Disallow: /admin/
+# Disallow: /test/
+
